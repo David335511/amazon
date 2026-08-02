@@ -1,0 +1,41 @@
+# Keep the Docker build context small and exclude secrets/junk.
+# The runtime image only needs: app/, config/, alembic/, alembic.ini,
+# pyproject.toml, docker/ and the entrypoint.
+
+# VCS
+.git
+.gitignore
+
+# Python / build
+.venv
+venv
+env
+__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+.coverage.*
+coverage.xml
+htmlcov
+
+# Secrets / environment
+.env
+.env.*
+cookies.txt
+
+# Logs / data / artifacts
+logs
+screenshots
+server.log
+server.err
+*.db
+*.sqlite3
+
+# Docs & tooling (not needed at runtime)
+tests
+*.md
+.idea
+.vscode

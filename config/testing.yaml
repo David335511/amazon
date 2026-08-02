@@ -1,0 +1,58 @@
+# ──────────────────────────────────────────────────────────────
+# Amazon AI Commerce Platform — Testing Configuration
+# ──────────────────────────────────────────────────────────────
+app:
+  name: Amazon-Test
+  debug: true
+  log_level: DEBUG
+  cors:
+    allowed_origins:
+      - "*"
+    allow_credentials: true
+    allow_methods: ["*"]
+    allow_headers: ["*"]
+
+database:
+  pool_size: 2
+  max_overflow: 5
+  echo: false
+  pool_pre_ping: true
+  pool_recycle: 60
+
+redis:
+  socket_connect_timeout: 2
+  socket_timeout: 2
+  retry_on_timeout: false
+  health_check_interval: 10
+
+server:
+  host: "127.0.0.1"
+  port: 8000
+  reload: false
+  workers: 1
+  max_request_size: 1048576
+
+logging:
+  format: json
+  level: DEBUG
+  handlers:
+    - console
+  file_path: null
+  rotation: null
+  retention: null
+
+telemetry:
+  enabled: false
+  service_name: amazon-test
+  exporter_otlp_endpoint: null
+  traces_sampler: parentbased_always_off
+  metrics_exporter: none
+  logs_exporter: none
+  instrument_fastapi: false
+  instrument_sqlalchemy: false
+  instrument_redis: false
+
+features:
+  enable_swagger: true
+  enable_metrics: false
+  rate_limiting: false

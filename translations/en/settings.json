@@ -1,0 +1,21 @@
+{
+  "title": "Settings",
+  "language": "Language",
+  "select_language": "Select Language",
+  "current_language": "Current Language",
+  "save_settings": "Save Settings",
+  "settings_saved": "Settings saved successfully",
+  "notifications": "Notifications",
+  "email_notifications": "Email Notifications",
+  "push_notifications": "Push Notifications",
+  "theme": "Theme",
+  "dark_mode": "Dark Mode",
+  "light_mode": "Light Mode",
+  "timezone": "Timezone",
+  "date_format": "Date Format",
+  "number_format": "Number Format",
+  "currency_format": "Currency Format",
+  "profile": "Profile",
+  "display_name": "Display Name",
+  "email": "Email"
+}

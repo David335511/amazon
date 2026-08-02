@@ -1,0 +1,21 @@
+{
+  "title": "设置",
+  "language": "语言",
+  "select_language": "选择语言",
+  "current_language": "当前语言",
+  "save_settings": "保存设置",
+  "settings_saved": "设置保存成功",
+  "notifications": "通知",
+  "email_notifications": "邮件通知",
+  "push_notifications": "推送通知",
+  "theme": "主题",
+  "dark_mode": "深色模式",
+  "light_mode": "浅色模式",
+  "timezone": "时区",
+  "date_format": "日期格式",
+  "number_format": "数字格式",
+  "currency_format": "货币格式",
+  "profile": "个人资料",
+  "display_name": "显示名称",
+  "email": "邮箱"
+}

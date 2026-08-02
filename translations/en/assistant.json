@@ -1,0 +1,23 @@
+{
+  "title": "AI Assistant",
+  "ask_question": "Ask a question about your products, suppliers, or opportunities.",
+  "question_placeholder": "e.g. Why is this profitable? Find similar products. Summarize today's opportunities.",
+  "ask": "Ask",
+  "thinking": "Thinking...",
+  "capabilities": "Capabilities",
+  "capability": "Capability",
+  "example_questions": "Example Questions",
+  "data_required": "Data Required",
+  "data_sources": "Data Sources",
+  "no_answer": "I couldn't find an answer. Try rephrasing your question or providing more context.",
+  "why_profitable": "Explain why a product is profitable",
+  "find_similar": "Find similar products",
+  "predict_next_sale": "Predict next sale",
+  "estimate_future_roi": "Estimate future ROI",
+  "summarize_opportunities": "Summarize today's opportunities",
+  "find_replacement_suppliers": "Find replacement suppliers",
+  "buy_more_inventory": "Should I buy more inventory?",
+  "generate_purchase_order": "Generate purchase orders",
+  "explain_calculation": "Explain all calculations",
+  "general_query": "General questions"
+}

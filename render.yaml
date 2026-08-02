@@ -1,0 +1,59 @@
+# ──────────────────────────────────────────────────────────────
+# Render Blueprint — Amazon AI Commerce Platform
+#
+# Deploys the FastAPI service as a Docker web service on the free tier.
+# It expects external managed dependencies:
+#   - Postgres -> Neon (DATABASE_URL)
+#   - Redis   -> Upstash (REDIS_URL)
+#   - OTLP    -> Grafana Cloud (OTEL_EXPORTER_OTLP_ENDPOINT + _HEADERS)
+#
+# The DATABASE_URL / REDIS_URL / OTLP variables are marked `sync: false`
+# so you fill them in from the Render dashboard after this blueprint
+# creates the service. See deploy/.env.production.example.
+# ──────────────────────────────────────────────────────────────
+services:
+  - type: web
+    name: amazon-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: docker/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/v1/health/live
+    autoDeploy: true
+    envVars:
+      # App
+      - key: APP_ENV
+        value: production
+      - key: APP_NAME
+        value: Amazon
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_LOG_LEVEL
+        value: INFO
+      - key: APP_SECRET_KEY
+        generateValue: true
+
+      # Server
+      - key: SERVER_HOST
+        value: 0.0.0.0
+      - key: SERVER_PORT
+        value: "8000"
+      - key: SERVER_WORKERS
+        value: "1"
+
+      # Postgres (Neon) — fill in from dashboard
+      - key: DATABASE_URL
+        sync: false
+
+      # Redis (Upstash) — fill in from dashboard
+      - key: REDIS_URL
+        sync: false
+
+      # OpenTelemetry (Grafana Cloud) — fill in from dashboard
+      - key: OTEL_SERVICE_NAME
+        value: amazon
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        sync: false
+      - key: OTEL_EXPORTER_OTLP_HEADERS
+        sync: false

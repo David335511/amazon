@@ -1,0 +1,60 @@
+# ──────────────────────────────────────────────────────────────
+# Amazon AI Commerce Platform — Development Configuration
+# ──────────────────────────────────────────────────────────────
+app:
+  name: Amazon
+  debug: true
+  log_level: DEBUG
+  cors:
+    allowed_origins:
+      - "http://localhost:3000"
+      - "http://localhost:8000"
+    allow_credentials: true
+    allow_methods: ["*"]
+    allow_headers: ["*"]
+
+database:
+  pool_size: 10
+  max_overflow: 20
+  echo: false
+  pool_pre_ping: true
+  pool_recycle: 3600
+
+redis:
+  socket_connect_timeout: 5
+  socket_timeout: 5
+  retry_on_timeout: true
+  health_check_interval: 30
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  reload: true
+  workers: 1
+  max_request_size: 10485760  # 10 MB
+
+logging:
+  format: json
+  level: DEBUG
+  handlers:
+    - console
+    - file
+  file_path: logs/amazon.log
+  rotation: "D"
+  retention: "30 days"
+
+telemetry:
+  enabled: true
+  service_name: amazon
+  exporter_otlp_endpoint: http://localhost:4317
+  traces_sampler: parentbased_always_on
+  metrics_exporter: none
+  logs_exporter: none
+  instrument_fastapi: true
+  instrument_sqlalchemy: true
+  instrument_redis: true
+
+features:
+  enable_swagger: true
+  enable_metrics: true
+  rate_limiting: false

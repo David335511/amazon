@@ -1,0 +1,23 @@
+{
+  "title": "AI助手",
+  "ask_question": "询问关于产品、供应商或机会的问题。",
+  "question_placeholder": "例如：为什么这个产品盈利？查找类似产品。总结今天的机会。",
+  "ask": "提问",
+  "thinking": "思考中...",
+  "capabilities": "能力",
+  "capability": "能力",
+  "example_questions": "示例问题",
+  "data_required": "所需数据",
+  "data_sources": "数据来源",
+  "no_answer": "无法找到答案。请尝试重新表述问题或提供更多上下文。",
+  "why_profitable": "解释产品为何盈利",
+  "find_similar": "查找类似产品",
+  "predict_next_sale": "预测下次销售",
+  "estimate_future_roi": "估算未来ROI",
+  "summarize_opportunities": "总结今日机会",
+  "find_replacement_suppliers": "寻找替代供应商",
+  "buy_more_inventory": "是否应该增加库存？",
+  "generate_purchase_order": "生成采购订单",
+  "explain_calculation": "解释所有计算",
+  "general_query": "一般问题"
+}

@@ -1,0 +1,58 @@
+# ──────────────────────────────────────────────────────────────
+# Amazon AI Commerce Platform — Production Configuration
+# ──────────────────────────────────────────────────────────────
+app:
+  name: Amazon
+  debug: false
+  log_level: INFO
+  cors:
+    allowed_origins:
+      - "https://amazon.example.com"
+    allow_credentials: true
+    allow_methods: ["GET", "POST", "PUT", "PATCH", "DELETE"]
+    allow_headers: ["Authorization", "Content-Type", "X-Request-Id"]
+
+database:
+  pool_size: 20
+  max_overflow: 40
+  echo: false
+  pool_pre_ping: true
+  pool_recycle: 300
+
+redis:
+  socket_connect_timeout: 3
+  socket_timeout: 3
+  retry_on_timeout: false
+  health_check_interval: 15
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  reload: false
+  workers: 4
+  max_request_size: 5242880  # 5 MB
+
+logging:
+  format: json
+  level: INFO
+  handlers:
+    - console
+  file_path: /var/log/amazon/amazon.log
+  rotation: "1 day"
+  retention: "90 days"
+
+telemetry:
+  enabled: true
+  service_name: amazon
+  exporter_otlp_endpoint: http://otel-collector:4317
+  traces_sampler: parentbased_always_on
+  metrics_exporter: otlp
+  logs_exporter: otlp
+  instrument_fastapi: true
+  instrument_sqlalchemy: true
+  instrument_redis: true
+
+features:
+  enable_swagger: false
+  enable_metrics: true
+  rate_limiting: true

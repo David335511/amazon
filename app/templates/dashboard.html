@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amazon AI Commerce Platform — Dashboard</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #242837;
+    --border: #2d3245;
+    --text: #e1e4ed;
+    --text2: #8b90a5;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --cyan: #06b6d4;
+  }
+  [data-theme="light"] {
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --surface2: #eef1f6;
+    --border: #d1d5db;
+    --text: #1f2937;
+    --text2: #6b7280;
+    --green: #16a34a;
+    --yellow: #ca8a04;
+    --red: #dc2626;
+    --blue: #2563eb;
+    --purple: #7c3aed;
+    --cyan: #0891b2;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header h1 { font-size: 20px; font-weight: 600; }
+  .header .subtitle { color: var(--text2); font-size: 13px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .status-badge {
+    padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500;
+  }
+  .status-running { background: rgba(34,197,94,0.15); color: var(--green); }
+  .status-stopped { background: rgba(239,68,68,0.15); color: var(--red); }
+  .status-paused { background: rgba(234,179,8,0.15); color: var(--yellow); }
+  .status-degraded { background: rgba(234,179,8,0.15); color: var(--yellow); }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 20px 24px; }
+
+  .grid { display: grid; gap: 16px; }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 1100px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 700px) { .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-value { font-size: 32px; font-weight: 700; }
+  .card-value.green { color: var(--green); }
+  .card-value.yellow { color: var(--yellow); }
+  .card-value.red { color: var(--red); }
+  .card-value.blue { color: var(--blue); }
+  .card-value.cyan { color: var(--cyan); }
+  .card-sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+  .btn {
+    padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text); cursor: pointer;
+    font-size: 13px; font-weight: 500; transition: all 0.15s;
+  }
+  .btn:hover { background: var(--border); }
+  .btn-primary { background: var(--blue); border-color: var(--blue); color: white; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-danger { background: var(--red); border-color: var(--red); color: white; }
+  .btn-danger:hover { opacity: 0.9; }
+  .btn-success { background: var(--green); border-color: var(--green); color: white; }
+  .btn-success:hover { opacity: 0.9; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; color: var(--text2); font-weight: 500; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: var(--surface2); }
+
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 6px;
+    font-size: 11px; font-weight: 600;
+  }
+  .badge-buy { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge-watch { background: rgba(234,179,8,0.15); color: var(--yellow); }
+  .badge-avoid { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge-skip { background: rgba(139,144,165,0.15); color: var(--text2); }
+
+  .worker-list { display: flex; flex-direction: column; gap: 8px; }
+  .worker-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; background: var(--surface2); border-radius: 8px;
+    font-size: 13px;
+  }
+  .worker-dot {
+    width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px;
+  }
+  .dot-busy { background: var(--green); }
+  .dot-idle { background: var(--text2); }
+  .dot-error { background: var(--red); }
+  .dot-stopped { background: var(--border); }
+
+  .log-entry { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .log-entry:last-child { border-bottom: none; }
+  .log-action { font-weight: 600; }
+  .log-score { float: right; color: var(--text2); }
+
+  .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; margin-top: 8px; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text2); }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    padding: 12px 20px; border-radius: 8px; font-size: 13px;
+    z-index: 1000; display: none; animation: slideIn 0.3s ease;
+  }
+  .toast-success { background: var(--green); color: white; }
+  .toast-error { background: var(--red); color: white; }
+  @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .nav-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .nav-tab {
+    padding: 10px 20px; cursor: pointer; font-size: 14px; font-weight: 500;
+    color: var(--text2); border-bottom: 2px solid transparent; transition: all 0.15s;
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .metric-row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 12px; }
+  .metric { }
+  .metric-label { font-size: 12px; color: var(--text2); }
+  .metric-value { font-size: 16px; font-weight: 600; }
+
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid var(--border); border-top-color: var(--blue);
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1 data-i18n="common.app.name">Amazon AI Commerce Platform</h1>
+    <div class="subtitle" data-i18n="dashboard.title">Sourcing Intelligence Dashboard</div>
+  </div>
+  <div class="header-right">
+    <span id="agentStatusBadge" class="status-badge status-stopped">● <span data-i18n="dashboard.stopped">STOPPED</span></span>
+    <span id="refreshTime" class="subtitle" style="font-size:12px"></span>
+    <select id="langSwitcher" onchange="switchLanguage(this.value)" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer">
+      <option value="en" data-i18n="language.en">English</option>
+      <option value="zh-CN" data-i18n="language.zh-CN">简体中文</option>
+    </select>
+    <button id="themeToggle" class="btn btn-sm" onclick="toggleTheme()" title="Toggle light/dark mode" style="font-size:16px;line-height:1">🌙</button>
+    <button class="btn btn-sm" onclick="refreshAll()" data-i18n="common.refresh">⟳ Refresh</button>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Nav Tabs -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchTab('overview', this)" data-i18n="nav.overview">Overview</div>
+    <div class="nav-tab" onclick="switchTab('agent', this)" data-i18n="nav.agent">Agent</div>
+    <div class="nav-tab" onclick="switchTab('analytics', this)" data-i18n="nav.analytics">Analytics</div>
+    <div class="nav-tab" onclick="switchTab('sourcing', this)" data-i18n="nav.sourcing">Sourcing</div>
+    <div class="nav-tab" onclick="switchTab('assistant', this)" data-i18n="nav.assistant">Assistant</div>
+    <div class="nav-tab" onclick="switchTab('products', this)" data-i18n="nav.products">Products</div>
+  </div>
+
+  <!-- ═══════ OVERVIEW TAB ═══════ -->
+  <div id="tab-overview" class="tab-content active">
+    <div class="grid grid-4" id="overviewCards">
+      <div class="card"><div class="card-title" data-i18n="dashboard.agent_status">Agent Status</div><div class="card-value" id="ovAgentStatus">—</div><div class="card-sub" id="ovAgentUptime"></div></div>
+      <div class="card"><div class="card-title" data-i18n="dashboard.workers">Workers</div><div class="card-value" id="ovWorkers">—</div><div class="card-sub" id="ovWorkerDetail"></div></div>
+      <div class="card"><div class="card-title" data-i18n="dashboard.queue_depth">Queue Depth</div><div class="card-value" id="ovQueueDepth">—</div><div class="card-sub" id="ovQueueDetail"></div></div>
+      <div class="card"><div class="card-title" data-i18n="dashboard.decisions_today">Decisions Today</div><div class="card-value" id="ovDecisions">—</div><div class="card-sub" id="ovDecisionDetail"></div></div>
+    </div>
+
+    <div class="grid grid-2" style="margin-top:16px">
+      <div class="card">
+        <div class="card-header"><span class="card-title" data-i18n="dashboard.recent_decisions">Recent Decisions</span></div>
+        <div id="recentDecisions"><div class="empty-state"><p data-i18n="dashboard.no_decisions">No decisions yet. Start the agent to see results.</p></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title" data-i18n="dashboard.quick_actions">Quick Actions</span></div>
+        <div class="btn-group" style="margin-bottom:16px">
+          <button id="btnStartAgent" class="btn btn-success" onclick="agentAction('start')" data-i18n="dashboard.start_agent">▶ Start Agent</button>
+          <button id="btnStopAgent" class="btn btn-danger" onclick="agentAction('stop')" data-i18n="dashboard.stop_agent">■ Stop Agent</button>
+          <button id="btnPauseAgent" class="btn btn-warning" style="background:var(--yellow);border-color:var(--yellow);color:#000" onclick="agentAction('pause')" data-i18n="dashboard.pause_agent">⏸ Pause</button>
+          <button id="btnResumeAgent" class="btn btn-primary" onclick="agentAction('resume')" data-i18n="dashboard.resume_agent">▶ Resume</button>
+        </div>
+        <div style="margin-top:8px">
+          <label style="font-size:13px;color:var(--text2)" data-i18n="dashboard.evaluate_product">Evaluate Product (ASIN):</label>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <input id="evalAsin" type="text" data-i18n="dashboard.enter_asin" placeholder="B0TESTASIN" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
+            <button class="btn btn-primary" onclick="evaluateProduct()" data-i18n="dashboard.score">Evaluate</button>
+          </div>
+          <div id="evalResult" style="margin-top:8px;font-size:13px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ AGENT TAB ═══════ -->
+  <div id="tab-agent" class="tab-content">
+    <div class="grid grid-3" id="agentCards">
+      <div class="card"><div class="card-title" data-i18n="agent.status">Status</div><div class="card-value" id="agStatus">—</div><div class="card-sub" id="agRunId"></div></div>
+      <div class="card"><div class="card-title" data-i18n="dashboard.cycles">Cycles</div><div class="card-value" id="agCycles">—</div><div class="card-sub" id="agLastCycle"></div></div>
+      <div class="card"><div class="card-title" data-i18n="agent.tasks_processed">Tasks</div><div class="card-value" id="agTasks">—</div><div class="card-sub" id="agTaskDetail"></div></div>
+    </div>
+    <div class="grid grid-2" style="margin-top:16px">
+      <div class="card">
+        <div class="card-header"><span class="card-title" data-i18n="dashboard.workers">Workers</span></div>
+        <div id="workerList"><div class="empty-state"><p data-i18n="dashboard.no_workers">No workers running.</p></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title" data-i18n="agent.queue_depth">Queue Stats</span></div>
+        <div id="queueStats"><div class="empty-state"><p data-i18n="dashboard.queue_empty">Queue is empty.</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ ANALYTICS TAB ═══════ -->
+  <div id="tab-analytics" class="tab-content">
+    <div class="card">
+      <div class="card-header"><span class="card-title" data-i18n="analytics.available_metrics">Available Metrics</span></div>
+      <div id="metricsList"><div class="spinner"></div></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-header"><span class="card-title" data-i18n="analytics.data_coverage">Data Coverage</span></div>
+      <div id="coverageInfo">
+        <div class="empty-state"><p data-i18n="analytics.select_product">Select a product to view data coverage.</p></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <input id="coverageAsin" type="text" data-i18n="products.asin" placeholder="ASIN (e.g. B0TEST)" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
+        <button class="btn btn-primary" onclick="loadCoverage()" data-i18n="analytics.check_coverage">Check Coverage</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ SOURCING TAB ═══════ -->
+  <div id="tab-sourcing" class="tab-content">
+    <div class="card">
+      <div class="card-header"><span class="card-title" data-i18n="dashboard.evaluate_product">Evaluate Product</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input id="srcAsin" type="text" data-i18n="dashboard.enter_asin" placeholder="ASIN" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
+        <button class="btn btn-primary" onclick="sourcingEval()" data-i18n="dashboard.score">Score</button>
+        <button class="btn" onclick="sourcingEvalAI()" data-i18n="dashboard.ai_recommendation">Score with AI</button>
+      </div>
+      <div id="sourcingResult"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-header"><span class="card-title" data-i18n="sourcing.methodology">Scoring Methodology</span></div>
+      <div id="methodologyInfo"><button class="btn btn-sm" onclick="loadMethodology()" data-i18n="common.load">Load Methodology</button></div>
+    </div>
+  </div>
+
+  <!-- ═══════ PRODUCTS TAB ═══════ -->
+  <div id="tab-products" class="tab-content">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title" data-i18n="dashboard.all_products">All Products</span>
+        <div style="display:flex;gap:8px">
+          <input id="prodSearch" type="text" data-i18n="dashboard.search_placeholder" placeholder="Search by title or ASIN..." style="width:250px;padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px" onkeyup="if(event.key==='Enter')loadProducts()">
+          <button class="btn btn-sm btn-primary" onclick="loadProducts()" data-i18n="common.search">Search</button>
+          <button class="btn btn-sm" onclick="loadProducts('')" data-i18n="dashboard.all_products">All</button>
+        </div>
+      </div>
+      <div id="productsTable"><div class="spinner"></div></div>
+      <div id="productsPagination" style="margin-top:12px;display:flex;justify-content:center;gap:8px"></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-header">
+        <span class="card-title" data-i18n="dashboard.product_detail">Product Detail</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input id="prodDetailAsin" type="text" data-i18n="products.asin" placeholder="ASIN" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
+        <button class="btn btn-primary" onclick="loadProductDetail()" data-i18n="dashboard.view_details">View Details</button>
+        <button class="btn" onclick="loadProductPricing()" data-i18n="dashboard.pricing_history">Pricing History</button>
+        <button class="btn" onclick="loadProductBSR()" data-i18n="dashboard.bsr_history">BSR History</button>
+      </div>
+      <div id="productDetail"></div>
+    </div>
+  </div>
+
+  <!-- ═══════ ASSISTANT TAB ═══════ -->
+  <div id="tab-assistant" class="tab-content">
+    <div class="card">
+      <div class="card-header"><span class="card-title" data-i18n="assistant.title">AI Assistant</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input id="asstQuestion" type="text" data-i18n="assistant.question_placeholder" placeholder="e.g. Why is this profitable? Find similar products. Summarize today's opportunities." style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
+        <input id="asstAsin" type="text" data-i18n="products.asin" placeholder="ASIN (optional)" style="width:140px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
+        <button class="btn btn-primary" onclick="askAssistant()" data-i18n="assistant.ask">Ask</button>
+      </div>
+      <div id="assistantResult"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-header"><span class="card-title" data-i18n="assistant.capabilities">Capabilities</span></div>
+      <div id="capabilitiesList"><button class="btn btn-sm" onclick="loadCapabilities()" data-i18n="common.load">Load Capabilities</button></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════════════════
+const API = '/api/v1';
+let refreshInterval = null;
+
+// ═══════════════════════════════════════════════════════════════
+// Theme Toggle (Light / Dark)
+// ═══════════════════════════════════════════════════════════════
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'light' ? '' : 'light';
+  if (next) {
+    html.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
+    document.getElementById('themeToggle').textContent = '☀️';
+  } else {
+    html.removeAttribute('data-theme');
+    localStorage.setItem('theme', 'dark');
+    document.getElementById('themeToggle').textContent = '🌙';
+  }
+}
+
+function applyTheme() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.getElementById('themeToggle').textContent = '☀️';
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.getElementById('themeToggle').textContent = '🌙';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Initialization
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  applyTheme();
+  refreshAll();
+  refreshInterval = setInterval(refreshAll, 15000);
+});
+
+// ═══════════════════════════════════════════════════════════════
+// Tab Switching
+// ═══════════════════════════════════════════════════════════════
+function switchTab(name, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// API Helper
+// ═══════════════════════════════════════════════════════════════
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Accept': 'application/json' } };
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  const res = await fetch(API + path, opts);
+  if (!res.ok) { const err = await res.text(); throw new Error(err); }
+  return res.json();
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast toast-' + type; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Agent Action Buttons — enable/disable based on status
+// ═══════════════════════════════════════════════════════════════
+function updateAgentButtons(status) {
+  const startBtn = document.getElementById('btnStartAgent');
+  const stopBtn = document.getElementById('btnStopAgent');
+  const pauseBtn = document.getElementById('btnPauseAgent');
+  const resumeBtn = document.getElementById('btnResumeAgent');
+
+  // Start: enabled when stopped or paused, disabled when running
+  startBtn.disabled = (status === 'running');
+  // Stop: enabled when running or paused, disabled when stopped
+  stopBtn.disabled = (status === 'stopped');
+  // Pause: enabled only when running
+  pauseBtn.disabled = (status !== 'running');
+  // Resume: enabled only when paused
+  resumeBtn.disabled = (status !== 'paused');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Refresh All
+// ═══════════════════════════════════════════════════════════════
+async function refreshAll() {
+  document.getElementById('refreshTime').textContent = new Date().toLocaleTimeString();
+  await Promise.all([
+    loadAgentStatus(),
+    loadAgentDashboard(),
+    loadRecentDecisions(),
+  ]);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Agent Status
+// ═══════════════════════════════════════════════════════════════
+async function loadAgentStatus() {
+  try {
+    const data = await api('GET', '/agent/status');
+    const status = (data.status || 'stopped').toLowerCase();
+    const badge = document.getElementById('agentStatusBadge');
+    badge.textContent = '● ' + status.toUpperCase();
+    badge.className = 'status-badge status-' + status;
+
+    document.getElementById('ovAgentStatus').textContent = status.toUpperCase();
+    document.getElementById('ovAgentStatus').className = 'card-value ' + (
+      status === 'running' ? 'green' : status === 'paused' ? 'yellow' : 'red'
+    );
+    document.getElementById('ovAgentUptime').textContent = data.started_at
+      ? 'Started ' + timeAgo(data.started_at) : 'Not started';
+
+    document.getElementById('agStatus').textContent = status.toUpperCase();
+    document.getElementById('agStatus').className = 'card-value ' + (
+      status === 'running' ? 'green' : status === 'paused' ? 'yellow' : 'red'
+    );
+    document.getElementById('agRunId').textContent = 'Run: ' + (data.run_id || '').slice(0, 8);
+    document.getElementById('agCycles').textContent = data.cycle_count || 0;
+    document.getElementById('agLastCycle').textContent = data.last_cycle_at
+      ? timeAgo(data.last_cycle_at) : 'No cycles yet';
+
+    // Update action button states based on agent status
+    updateAgentButtons(status);
+
+    const tasks = (data.total_tasks_succeeded || 0) + (data.total_tasks_failed || 0);
+    document.getElementById('agTasks').textContent = tasks;
+    document.getElementById('agTaskDetail').textContent =
+      (data.total_tasks_succeeded || 0) + ' succeeded, ' + (data.total_tasks_failed || 0) + ' failed';
+
+    // Workers
+    const workers = data.workers || [];
+    document.getElementById('ovWorkers').textContent = workers.length;
+    const active = workers.filter(w => w.status === 'busy').length;
+    const idle = workers.filter(w => w.status === 'idle').length;
+    document.getElementById('ovWorkerDetail').textContent = active + ' busy, ' + idle + ' idle';
+
+    if (workers.length) {
+      document.getElementById('workerList').innerHTML = workers.map(w => `
+        <div class="worker-item">
+          <div>
+            <span class="worker-dot dot-${w.status}"></span>
+            <strong>${w.worker_id}</strong>
+            <span style="color:var(--text2);margin-left:8px">${w.status}</span>
+          </div>
+          <div>
+            <span style="color:var(--text2)">${w.tasks_completed} done, ${w.tasks_failed} failed</span>
+            <span style="color:var(--text2);margin-left:12px">${fmtTime(w.uptime_seconds)}</span>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      document.getElementById('workerList').innerHTML = '<div class="empty-state"><p>No workers running.</p></div>';
+    }
+  } catch (e) { console.error('loadAgentStatus', e); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Agent Dashboard
+// ═══════════════════════════════════════════════════════════════
+async function loadAgentDashboard() {
+  try {
+    const data = await api('GET', '/agent/dashboard');
+    const q = data.queue || {};
+    document.getElementById('ovQueueDepth').textContent = q.depth || 0;
+    document.getElementById('ovQueueDetail').textContent =
+      (q.total_completed || 0) + ' completed, ' + (q.total_failed || 0) + ' failed';
+
+    const d = data.decisions || {};
+    document.getElementById('ovDecisions').textContent = d.total || 0;
+    document.getElementById('ovDecisionDetail').textContent =
+      (d.recent_buy || 0) + ' BUY, ' + (d.recent_watch || 0) + ' WATCH';
+
+    // Queue stats
+    document.getElementById('queueStats').innerHTML = `
+      <div class="metric-row">
+        <div class="metric"><div class="metric-label">Depth</div><div class="metric-value">${q.depth || 0}</div></div>
+        <div class="metric"><div class="metric-label">Running</div><div class="metric-value">${q.running || 0}</div></div>
+        <div class="metric"><div class="metric-label">Enqueued</div><div class="metric-value">${q.total_enqueued || 0}</div></div>
+        <div class="metric"><div class="metric-label">Completed</div><div class="metric-value">${q.total_completed || 0}</div></div>
+        <div class="metric"><div class="metric-label">Failed</div><div class="metric-value">${q.total_failed || 0}</div></div>
+      </div>
+    `;
+  } catch (e) { console.error('loadAgentDashboard', e); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Recent Decisions
+// ═══════════════════════════════════════════════════════════════
+async function loadRecentDecisions() {
+  try {
+    const data = await api('GET', '/agent/decisions?limit=10');
+    const decisions = data.decisions || [];
+    if (!decisions.length) {
+      document.getElementById('recentDecisions').innerHTML = '<div class="empty-state"><p>No decisions yet. Start the agent to see results.</p></div>';
+      return;
+    }
+    document.getElementById('recentDecisions').innerHTML = decisions.map(d => `
+      <div class="log-entry">
+        <span class="badge badge-${(d.action || 'skip').toLowerCase()}">${d.action || 'SKIP'}</span>
+        <span class="log-action">${d.product_title || d.asin || 'Unknown'}</span>
+        <span class="log-score">Score: ${d.opportunity_score != null ? d.opportunity_score.toFixed(0) : '—'}/100 | ROI: ${d.roi_percentage != null ? d.roi_percentage.toFixed(1) : '—'}%</span>
+      </div>
+    `).join('');
+  } catch (e) { console.error('loadRecentDecisions', e); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Agent Actions
+// ═══════════════════════════════════════════════════════════════
+async function agentAction(action) {
+  try {
+    const data = await api('POST', '/agent/' + action);
+    showToast('Agent ' + action + ': ' + data.status);
+    await loadAgentStatus();
+  } catch (e) { showToast('Failed: ' + e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Evaluate Product
+// ═══════════════════════════════════════════════════════════════
+async function evaluateProduct() {
+  const asin = document.getElementById('evalAsin').value.trim();
+  if (!asin) { showToast('Enter an ASIN', 'error'); return; }
+  document.getElementById('evalResult').innerHTML = '<span class="spinner"></span> Evaluating...';
+  try {
+    const data = await api('GET', '/sourcing/evaluate/' + asin + '?days=90');
+    const score = data.opportunity_score || {};
+    document.getElementById('evalResult').innerHTML = `
+      <div style="background:var(--surface2);padding:12px;border-radius:8px;margin-top:8px">
+        <strong>${data.title || asin}</strong>
+        <div style="margin-top:8px;display:flex;gap:16px;flex-wrap:wrap">
+          <span>Score: <strong>${score.total_score != null ? score.total_score.toFixed(1) : '—'}/100</strong></span>
+          <span>Confidence: <strong>${data.confidence || '—'}</strong></span>
+          <span>Risk: <strong>${data.risk_level || '—'}</strong></span>
+          <span>Viable: <strong>${score.is_viable ? '✅ Yes' : '❌ No'}</strong></span>
+        </div>
+        ${data.strengths && data.strengths.length ? '<div style="margin-top:8px;color:var(--green)">✓ ' + data.strengths.slice(0, 2).join('<br>✓ ') + '</div>' : ''}
+        ${data.weaknesses && data.weaknesses.length ? '<div style="margin-top:4px;color:var(--red)">✗ ' + data.weaknesses.slice(0, 2).join('<br>✗ ') + '</div>' : ''}
+      </div>
+    `;
+  } catch (e) { document.getElementById('evalResult').innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>'; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Analytics Tab
+// ═══════════════════════════════════════════════════════════════
+async function loadMetrics() {
+  try {
+    const data = await api('GET', '/analytics/metrics');
+    const metrics = data.metrics || [];
+
+    // Translation maps for known metric descriptions and table names
+    const descMap = {
+      'Amazon listing price': __('analytics.metric_amazon_price'),
+      'Buy Box price': __('analytics.metric_buy_box_price'),
+      'Supplier cost price': __('analytics.metric_supplier_price'),
+      'Best Sellers Rank': __('analytics.metric_bsr'),
+      'New-condition sellers': __('analytics.metric_new_seller_count'),
+      'FBA sellers': __('analytics.metric_fba_seller_count'),
+      'Physical inventory on hand': __('analytics.metric_quantity_on_hand'),
+      'Available inventory (on_hand - reserved)': __('analytics.metric_quantity_available'),
+      'Total Amazon fees': __('analytics.metric_total_fees'),
+      'Amazon referral fee': __('analytics.metric_referral_fee'),
+      'FBA fulfillment fee': __('analytics.metric_fulfillment_fee'),
+      'Net profit per unit': __('analytics.metric_net_profit'),
+      'Gross profit per unit': __('analytics.metric_gross_profit'),
+      'Net profit margin percentage': __('analytics.metric_margin_percentage'),
+      'Return on investment percentage': __('analytics.metric_roi_percentage'),
+      'Estimated monthly sales volume': __('analytics.metric_estimated_monthly_sales'),
+    };
+    const tableMap = {
+      'amazon_prices': __('analytics.table_amazon_prices'),
+      'product_prices': __('analytics.table_product_prices'),
+      'sales_estimates': __('analytics.table_sales_estimates'),
+      'seller_counts': __('analytics.table_seller_counts'),
+      'historical_inventory': __('analytics.table_historical_inventory'),
+      'historical_fees': __('analytics.table_historical_fees'),
+      'profit_calculations': __('analytics.table_profit_calculations'),
+    };
+
+    document.getElementById('metricsList').innerHTML = `
+      <table>
+        <tr><th>${__('analytics.metric')}</th><th>${__('analytics.description')}</th><th>${__('analytics.table')}</th></tr>
+        ${metrics.map(m => `<tr><td><code>${m.name}</code></td><td>${descMap[m.description] || m.description}</td><td>${tableMap[m.table] || m.table}</td></tr>`).join('')}
+      </table>
+    `;
+  } catch (e) { document.getElementById('metricsList').innerHTML = '<span style="color:var(--red)">Failed to load: ' + e.message + '</span>'; }
+}
+
+async function loadCoverage() {
+  const asin = document.getElementById('coverageAsin').value.trim();
+  if (!asin) { showToast('Enter an ASIN', 'error'); return; }
+  try {
+    // First find the product
+    const prod = await api('GET', '/products/search/asin/' + asin);
+    if (!prod || !prod.id) { document.getElementById('coverageInfo').innerHTML = '<span style="color:var(--red)">Product not found</span>'; return; }
+    const data = await api('GET', '/analytics/products/' + prod.id + '/coverage');
+    const tables = data.tables || {};
+    document.getElementById('coverageInfo').innerHTML = `
+      <div style="margin-bottom:8px"><strong>${data.asin}</strong> — ${data.product_id}</div>
+      <table>
+        <tr><th>Table</th><th>Count</th><th>Oldest</th><th>Newest</th></tr>
+        ${Object.entries(tables).map(([name, info]) => `
+          <tr>
+            <td><code>${name}</code></td>
+            <td>${info.count}</td>
+            <td>${info.oldest ? new Date(info.oldest).toLocaleDateString() : '—'}</td>
+            <td>${info.newest ? new Date(info.newest).toLocaleDateString() : '—'}</td>
+          </tr>
+        `).join('')}
+      </table>
+    `;
+  } catch (e) { document.getElementById('coverageInfo').innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>'; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Sourcing Tab
+// ═══════════════════════════════════════════════════════════════
+async function sourcingEval() {
+  const asin = document.getElementById('srcAsin').value.trim();
+  if (!asin) { showToast('Enter an ASIN', 'error'); return; }
+  document.getElementById('sourcingResult').innerHTML = '<span class="spinner"></span> Scoring...';
+  try {
+    const data = await api('GET', '/sourcing/evaluate/' + asin + '?days=90');
+    renderSourcingResult(data);
+  } catch (e) { document.getElementById('sourcingResult').innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>'; }
+}
+
+async function sourcingEvalAI() {
+  const asin = document.getElementById('srcAsin').value.trim();
+  if (!asin) { showToast('Enter an ASIN', 'error'); return; }
+  document.getElementById('sourcingResult').innerHTML = '<span class="spinner"></span> Scoring with AI...';
+  try {
+    const data = await api('GET', '/sourcing/evaluate/' + asin + '/ai?days=90');
+    renderSourcingResult(data);
+  } catch (e) { document.getElementById('sourcingResult').innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>'; }
+}
+
+function renderSourcingResult(data) {
+  const score = data.opportunity_score || {};
+  const rules = score.rule_results || [];
+  const ai = data.ai_recommendation;
+
+  let html = `
+    <div style="background:var(--surface2);padding:16px;border-radius:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap">
+        <div>
+          <strong style="font-size:18px">${data.title || data.asin}</strong>
+          <span style="color:var(--text2);margin-left:8px">${data.asin}</span>
+        </div>
+        <div style="font-size:24px;font-weight:700" class="${score.total_score >= 70 ? 'green' : score.total_score >= 40 ? 'yellow' : 'red'}">
+          ${score.total_score != null ? score.total_score.toFixed(1) : '—'}/100
+        </div>
+      </div>
+      <div class="metric-row" style="margin-top:12px">
+        <div class="metric"><div class="metric-label">Confidence</div><div class="metric-value">${data.confidence || '—'}</div></div>
+        <div class="metric"><div class="metric-label">Risk</div><div class="metric-value">${data.risk_level || '—'}</div></div>
+        <div class="metric"><div class="metric-label">Viable</div><div class="metric-value">${score.is_viable ? '✅' : '❌'}</div></div>
+        <div class="metric"><div class="metric-label">Data Points</div><div class="metric-value">${data.data_points_used || 0}</div></div>
+      </div>
+  `;
+
+  // AI Recommendation
+  if (ai) {
+    const rec = ai.recommendation || '';
+    const recClass = rec === 'BUY' ? 'green' : rec === 'WATCH' ? 'yellow' : 'red';
+    html += `
+      <div style="margin-top:12px;padding:12px;background:var(--bg);border-radius:8px;border-left:3px solid ${rec === 'BUY' ? 'var(--green)' : rec === 'WATCH' ? 'var(--yellow)' : 'var(--red)'}">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:600">AI Recommendation: <span class="${recClass}">${rec}</span></span>
+          <span style="color:var(--text2);font-size:12px">${ai.provider_used} · ${(ai.latency_ms/1000).toFixed(1)}s</span>
+        </div>
+        ${ai.pros && ai.pros.length ? '<div style="margin-top:8px;color:var(--green)">✓ ' + ai.pros.join('<br>✓ ') + '</div>' : ''}
+        ${ai.cons && ai.cons.length ? '<div style="margin-top:4px;color:var(--red)">✗ ' + ai.cons.join('<br>✗ ') + '</div>' : ''}
+        ${ai.risks && ai.risks.length ? '<div style="margin-top:4px;color:var(--yellow)">⚠ ' + ai.risks.join('<br>⚠ ') + '</div>' : ''}
+        <div style="margin-top:8px;color:var(--text2);font-size:13px">${ai.expected_return || ''}</div>
+        ${ai.explanation ? '<div style="margin-top:8px;font-size:13px;line-height:1.5">' + ai.explanation + '</div>' : ''}
+      </div>
+    `;
+  }
+
+  // Rule results
+  if (rules.length) {
+    html += `<div style="margin-top:12px"><table>
+      <tr><th>Rule</th><th>Score</th><th>Status</th><th>Detail</th></tr>
+      ${rules.map(r => `
+        <tr>
+          <td>${r.display_name || r.rule_name}</td>
+          <td>${(r.score * 100).toFixed(0)}</td>
+          <td><span class="badge ${r.passed ? 'badge-buy' : 'badge-avoid'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
+          <td style="color:var(--text2);font-size:12px">${r.summary || ''}</td>
+        </tr>
+      `).join('')}
+    </table></div>`;
+  }
+
+  html += '</div>';
+  document.getElementById('sourcingResult').innerHTML = html;
+}
+
+async function loadMethodology() {
+  try {
+    const data = await api('GET', '/sourcing/methodology');
+
+    // Client-side translation map for known methodology content
+    const descMap = {
+      'Products are evaluated against 7 weighted rules. Each rule produces a normalized score (0.0-1.0), a pass/fail status, and human-readable reasoning. The Opportunity Score is the weighted average of all rule scores, scaled to 0-100.': __('dashboard.methodology_desc'),
+    };
+    const formulaMap = {
+      'weighted_score = Σ(rule_score_i × weight_i) / Σ(weight_i); total_score = weighted_score × 100': __('dashboard.methodology_formula_text'),
+    };
+    const normMap = {
+      'Below minimum: score = actual/minimum × 0.5 (0 to 0.5); At minimum: score = 0.5; Between min/target: linear interpolation 0.5 to 1.0; At or above target: score = 1.0': __('dashboard.methodology_normalization_text'),
+    };
+    const viaMap = {
+      'Critical rule failures < threshold (default: 1) AND Opportunity Score >= minimum (default: 40)': __('dashboard.methodology_viability_text'),
+    };
+    const ruleNameMap = {
+      'Minimum ROI': __('dashboard.methodology_rule_min_roi'),
+      'Minimum Profit': __('dashboard.methodology_rule_min_profit'),
+      'Minimum Sales Volume': __('dashboard.methodology_rule_min_sales_volume'),
+      'Competition Level': __('dashboard.methodology_rule_competition_level'),
+      'Buy Box Stability': __('dashboard.methodology_rule_buy_box_stability'),
+      'Price Stability': __('dashboard.methodology_rule_price_stability'),
+      'Inventory Availability': __('dashboard.methodology_rule_inventory_availability'),
+    };
+    const sevMap = {
+      'critical': __('dashboard.methodology_severity_critical'),
+      'major': __('dashboard.methodology_severity_major'),
+      'minor': __('dashboard.methodology_severity_minor'),
+    };
+    const valMap = {
+      '300/month': __('dashboard.methodology_val_300_per_month'),
+      '2,000/month': __('dashboard.methodology_val_2000_per_month'),
+      '≤20 sellers, ≤70% FBA': __('dashboard.methodology_val_20_sellers_70_fba'),
+      '3-10 sellers': __('dashboard.methodology_val_3_10_sellers'),
+      '30 days': __('dashboard.methodology_val_30_days'),
+      '90 days': __('dashboard.methodology_val_90_days'),
+    };
+
+    const desc = descMap[data.description] || data.description;
+    const formula = formulaMap[data.scoring_formula] || data.scoring_formula;
+    const norm = normMap[data.normalization] || data.normalization;
+    const via = viaMap[data.viability_criteria] || data.viability_criteria;
+
+    document.getElementById('methodologyInfo').innerHTML = `
+      <div style="font-size:13px;line-height:1.6">
+        <p><strong>${__('dashboard.methodology_version')}:</strong> ${data.version}</p>
+        <p style="margin-top:8px">${desc}</p>
+        <p style="margin-top:8px"><strong>${__('dashboard.methodology_formula')}:</strong> ${formula}</p>
+        <p style="margin-top:4px"><strong>${__('dashboard.methodology_normalization')}:</strong> ${norm}</p>
+        <p style="margin-top:4px"><strong>${__('dashboard.methodology_viability')}:</strong> ${via}</p>
+        <div style="margin-top:12px">
+          <table>
+            <tr><th>${__('dashboard.methodology_rule')}</th><th>${__('dashboard.methodology_weight')}</th><th>${__('dashboard.methodology_severity')}</th><th>${__('dashboard.methodology_min')}</th><th>${__('dashboard.methodology_target')}</th></tr>
+            ${(data.rules || []).map(r => `
+              <tr><td>${ruleNameMap[r.name] || r.name}</td><td>${r.weight}</td><td>${sevMap[r.severity] || r.severity}</td><td>${valMap[r.default_minimum] || r.default_minimum}</td><td>${valMap[r.default_target] || r.default_target}</td></tr>
+            `).join('')}
+          </table>
+        </div>
+      </div>
+    `;
+  } catch (e) { document.getElementById('methodologyInfo').innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>'; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Assistant Tab
+// ═══════════════════════════════════════════════════════════════
+async function askAssistant() {
+  const question = document.getElementById('asstQuestion').value.trim();
+  const asin = document.getElementById('asstAsin').value.trim();
+  if (!question) { showToast('Enter a question', 'error'); return; }
+  document.getElementById('assistantResult').innerHTML = '<span class="spinner"></span> Thinking...';
+  try {
+    const body = { question };
+    if (asin) body.asin = asin;
+    const data = await api('POST', '/assistant/ask', body);
+    document.getElementById('assistantResult').innerHTML = `
+      <div style="background:var(--surface2);padding:16px;border-radius:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span class="badge badge-${data.capability === 'why_profitable' ? 'buy' : 'watch'}">${data.capability}</span>
+          <span style="color:var(--text2);font-size:12px">Confidence: ${data.confidence} · ${data.provider_used} · ${(data.latency_ms/1000).toFixed(1)}s</span>
+        </div>
+        <div style="font-size:14px;line-height:1.6;white-space:pre-wrap">${data.answer}</div>
+        ${data.contexts && data.contexts.length ? `
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Data Sources (${data.contexts.length}):</div>
+            ${data.contexts.map(c => `<div style="font-size:12px;color:var(--text2)">• ${c.source}: ${c.summary}</div>`).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  } catch (e) { document.getElementById('assistantResult').innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>'; }
+}
+
+async function loadCapabilities() {
+  try {
+    const data = await api('GET', '/assistant/capabilities');
+    const caps = data.capabilities || [];
+    document.getElementById('capabilitiesList').innerHTML = `
+      <table>
+        <tr><th>Capability</th><th>Description</th><th>Example</th></tr>
+        ${caps.map(c => `
+          <tr>
+            <td><code>${c.name}</code></td>
+            <td>${c.description}</td>
+            <td style="color:var(--text2);font-size:12px">${(c.example_questions || []).slice(0, 1).join(', ')}</td>
+          </tr>
+        `).join('')}
+      </table>
+    `;
+  } catch (e) { document.getElementById('capabilitiesList').innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>'; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Products Tab
+// ═══════════════════════════════════════════════════════════════
+let prodPage = 1;
+const prodPageSize = 20;
+
+async function loadProducts(search) {
+  const q = search || document.getElementById('prodSearch').value.trim();
+  document.getElementById('productsTable').innerHTML = '<span class="spinner"></span> Loading...';
+  try {
+    let url = '/products/?page=' + prodPage + '&page_size=' + prodPageSize;
+    if (q) url += '&search=' + encodeURIComponent(q);
+    const data = await api('GET', url);
+    const items = data.items || [];
+    if (!items.length) {
+      document.getElementById('productsTable').innerHTML = '<div class="empty-state"><p>No products found.</p></div>';
+      document.getElementById('productsPagination').innerHTML = '';
+      return;
+    }
+    document.getElementById('productsTable').innerHTML = `
+      <table>
+        <tr><th>ASIN</th><th>Title</th><th>Price</th><th>Brand</th><th>FBA</th><th>Active</th><th>Actions</th></tr>
+        ${items.map(p => `
+          <tr>
+            <td><code>${p.asin || '—'}</code></td>
+            <td>${(p.title || '').substring(0, 60)}${(p.title || '').length > 60 ? '...' : ''}</td>
+            <td>${p.price != null ? '$' + parseFloat(p.price).toFixed(2) : '—'}</td>
+            <td>${p.brand || '—'}</td>
+            <td>${p.is_amazon_fba ? '✅' : '—'}</td>
+            <td>${p.is_active ? '✅' : '❌'}</td>
+            <td>
+              <button class="btn btn-sm" onclick="quickEval('${p.asin}')">Score</button>
+              <button class="btn btn-sm" onclick="document.getElementById('prodDetailAsin').value='${p.asin}';loadProductDetail()">Details</button>
+            </td>
+          </tr>
+        `).join('')}
+      </table>
+    `;
+    // Pagination
+    const totalPages = data.total_pages || 1;
+    let pagHtml = '';
+    if (prodPage > 1) pagHtml += '<button class="btn btn-sm" onclick="prodPage--;loadProducts(\'' + (q || '') + '\')">◀ Prev</button>';
+    pagHtml += '<span style="color:var(--text2);font-size:13px;padding:0 12px">Page ' + prodPage + ' of ' + totalPages + ' (' + data.total + ' total)</span>';
+    if (prodPage < totalPages) pagHtml += '<button class="btn btn-sm" onclick="prodPage++;loadProducts(\'' + (q || '') + '\')">Next ▶</button>';
+    document.getElementById('productsPagination').innerHTML = pagHtml;
+  } catch (e) { document.getElementById('productsTable').innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>'; }
+}
+
+async function quickEval(asin) {
+  document.getElementById('srcAsin').value = asin;
+  switchTab('sourcing', document.querySelectorAll('.nav-tab')[3]);
+  sourcingEval();
+}
+
+async function loadProductDetail() {
+  const asin = document.getElementById('prodDetailAsin').value.trim();
+  if (!asin) { showToast('Enter an ASIN', 'error'); return; }
+  document.getElementById('productDetail').innerHTML = '<span class="spinner"></span>';
+  try {
+    const data = await api('GET', '/products/search/asin/' + asin);
+    if (!data || !data.id) {
+      document.getElementById('productDetail').innerHTML = '<span style="color:var(--red)">Product not found</span>';
+      return;
+    }
+    document.getElementById('productDetail').innerHTML = `
+      <div style="background:var(--surface2);padding:16px;border-radius:8px">
+        <div style="display:flex;justify-content:space-between">
+          <div>
+            <strong style="font-size:16px">${data.title || 'Unknown'}</strong>
+            <div style="color:var(--text2);margin-top:4px">ASIN: ${data.asin} · ${data.upc ? 'UPC: ' + data.upc : ''}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:20px;font-weight:700">${data.price != null ? '$' + parseFloat(data.price).toFixed(2) : '—'}</div>
+            <div style="color:var(--text2);font-size:12px">${data.buy_box_price != null ? 'Buy Box: $' + parseFloat(data.buy_box_price).toFixed(2) : ''}</div>
+          </div>
+        </div>
+        <div class="metric-row" style="margin-top:12px">
+          <div class="metric"><div class="metric-label">Brand</div><div class="metric-value">${data.brand || '—'}</div></div>
+          <div class="metric"><div class="metric-label">FBA</div><div class="metric-value">${data.is_amazon_fba ? '✅ Yes' : '❌ No'}</div></div>
+          <div class="metric"><div class="metric-label">Amazon Brand</div><div class="metric-value">${data.is_amazon_brand ? '✅' : '—'}</div></div>
+          <div class="metric"><div class="metric-label">Dimensions</div><div class="metric-value">${data.dimensions || '—'}</div></div>
+          <div class="metric"><div class="metric-label">Weight</div><div class="metric-value">${data.weight ? data.weight + ' ' + (data.weight_unit || '') : '—'}</div></div>
+        </div>
+        ${data.latest_reviews ? `
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+            <div class="metric-row">
+              <div class="metric"><div class="metric-label">Rating</div><div class="metric-value">${data.latest_reviews.rating || '—'} ⭐ (${data.latest_reviews.review_count || 0} reviews)</div></div>
+              <div class="metric"><div class="metric-label">Sales Rank</div><div class="metric-value">#${data.latest_sales_estimate?.sales_rank || '—'}</div></div>
+              <div class="metric"><div class="metric-label">Monthly Sales</div><div class="metric-value">${data.latest_sales_estimate?.estimated_monthly_sales || 0}/mo</div></div>
+              <div class="metric"><div class="metric-label">Sellers</div><div class="metric-value">${data.latest_seller_count?.new_seller_count || 0} new, ${data.latest_seller_count?.fba_seller_count || 0} FBA</div></div>
+            </div>
+          </div>
+        ` : ''}
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn btn-sm btn-primary" onclick="quickEval('${data.asin}')">Score Opportunity</button>
+          <button class="btn btn-sm" onclick="loadProductPricing()">Pricing History</button>
+          <button class="btn btn-sm" onclick="loadProductBSR()">BSR History</button>
+        </div>
+      </div>
+    `;
+  } catch (e) { document.getElementById('productDetail').innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>'; }
+}
+
+async function loadProductPricing() {
+  const asin = document.getElementById('prodDetailAsin').value.trim();
+  if (!asin) { showToast('Enter an ASIN', 'error'); return; }
+  try {
+    const prod = await api('GET', '/products/search/asin/' + asin);
+    if (!prod || !prod.id) { showToast('Product not found', 'error'); return; }
+    const data = await api('GET', '/analytics/products/' + prod.id + '/time-series/amazon_price?days=90&limit=20&include_summary=true');
+    const pts = data.data_points || [];
+    const summary = data.summary;
+    let html = '<div style="background:var(--surface2);padding:16px;border-radius:8px;margin-top:8px">';
+    html += '<div style="font-weight:600;margin-bottom:8px">Amazon Price History — ' + asin + '</div>';
+    if (summary) {
+      html += '<div class="metric-row">';
+      html += '<div class="metric"><div class="metric-label">Current</div><div class="metric-value">' + (summary.current_value ? '$' + parseFloat(summary.current_value).toFixed(2) : '—') + '</div></div>';
+      html += '<div class="metric"><div class="metric-label">Min</div><div class="metric-value">' + (summary.min ? '$' + parseFloat(summary.min).toFixed(2) : '—') + '</div></div>';
+      html += '<div class="metric"><div class="metric-label">Max</div><div class="metric-value">' + (summary.max ? '$' + parseFloat(summary.max).toFixed(2) : '—') + '</div></div>';
+      html += '<div class="metric"><div class="metric-label">Mean</div><div class="metric-value">' + (summary.mean ? '$' + parseFloat(summary.mean).toFixed(2) : '—') + '</div></div>';
+      html += '<div class="metric"><div class="metric-label">Trend</div><div class="metric-value">' + (summary.trend || '—') + '</div></div>';
+      html += '<div class="metric"><div class="metric-label">Data Points</div><div class="metric-value">' + (summary.data_point_count || 0) + '</div></div>';
+      html += '</div>';
+    }
+    if (pts.length) {
+      html += '<table style="margin-top:8px"><tr><th>Date</th><th>Price</th></tr>';
+      pts.slice(0, 10).forEach(p => {
+        html += '<tr><td>' + new Date(p.timestamp).toLocaleDateString() + '</td><td>$' + parseFloat(p.value).toFixed(2) + '</td></tr>';
+      });
+      html += '</table>';
+      if (pts.length > 10) html += '<div style="color:var(--text2);font-size:12px;margin-top:4px">Showing 10 of ' + pts.length + ' data points</div>';
+    } else {
+      html += '<div style="color:var(--text2);margin-top:8px">No price history data available.</div>';
+    }
+    html += '</div>';
+    document.getElementById('productDetail').innerHTML = html;
+  } catch (e) { document.getElementById('productDetail').innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>'; }
+}
+
+async function loadProductBSR() {
+  const asin = document.getElementById('prodDetailAsin').value.trim();
+  if (!asin) { showToast('Enter an ASIN', 'error'); return; }
+  try {
+    const prod = await api('GET', '/products/search/asin/' + asin);
+    if (!prod || !prod.id) { showToast('Product not found', 'error'); return; }
+    const data = await api('GET', '/analytics/products/' + prod.id + '/time-series/bsr?days=90&limit=20&include_summary=true');
+    const pts = data.data_points || [];
+    const summary = data.summary;
+    let html = '<div style="background:var(--surface2);padding:16px;border-radius:8px;margin-top:8px">';
+    html += '<div style="font-weight:600;margin-bottom:8px">Best Sellers Rank History — ' + asin + '</div>';
+    if (summary) {
+      html += '<div class="metric-row">';
+      html += '<div class="metric"><div class="metric-label">Current Rank</div><div class="metric-value">#' + (summary.current_value ? parseFloat(summary.current_value).toFixed(0) : '—') + '</div></div>';
+      html += '<div class="metric"><div class="metric-label">Best</div><div class="metric-value">#' + (summary.min ? parseFloat(summary.min).toFixed(0) : '—') + '</div></div>';
+      html += '<div class="metric"><div class="metric-label">Worst</div><div class="metric-value">#' + (summary.max ? parseFloat(summary.max).toFixed(0) : '—') + '</div></div>';
+      html += '<div class="metric"><div class="metric-label">Trend</div><div class="metric-value">' + (summary.trend || '—') + '</div></div>';
+      html += '<div class="metric"><div class="metric-label">Data Points</div><div class="metric-value">' + (summary.data_point_count || 0) + '</div></div>';
+      html += '</div>';
+    }
+    if (pts.length) {
+      html += '<table style="margin-top:8px"><tr><th>Date</th><th>Rank</th></tr>';
+      pts.slice(0, 10).forEach(p => {
+        html += '<tr><td>' + new Date(p.timestamp).toLocaleDateString() + '</td><td>#' + parseFloat(p.value).toFixed(0) + '</td></tr>';
+      });
+      html += '</table>';
+    } else {
+      html += '<div style="color:var(--text2);margin-top:8px">No BSR history data available.</div>';
+    }
+    html += '</div>';
+    document.getElementById('productDetail').innerHTML = html;
+  } catch (e) { document.getElementById('productDetail').innerHTML = '<span style="color:var(--red)">Error: ' + e.message + '</span>'; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Utilities
+// ═══════════════════════════════════════════════════════════════
+function timeAgo(iso) {
+  const sec = (new Date() - new Date(iso)) / 1000;
+  if (sec < 60) return Math.round(sec) + 's ago';
+  if (sec < 3600) return Math.round(sec / 60) + 'm ago';
+  return Math.round(sec / 3600) + 'h ago';
+}
+function fmtTime(s) {
+  if (s < 60) return Math.round(s) + 's';
+  if (s < 3600) return Math.round(s / 60) + 'm';
+  return Math.round(s / 3600) + 'h';
+}
+
+// Load metrics on analytics tab click
+document.querySelector('.nav-tab:nth-child(3)').addEventListener('click', loadMetrics);
+
+// ═══════════════════════════════════════════════════════════════
+// Internationalization — Instant Language Switching
+// ═══════════════════════════════════════════════════════════════
+let currentLang = 'en';
+let translations = {};
+
+// Global translation helper for dynamic content
+function __(key, ...args) {
+  const parts = key.split('.');
+  let val = translations;
+  for (const p of parts) {
+    if (val && typeof val === 'object') val = val[p];
+    else return key;
+  }
+  if (typeof val !== 'string') return key;
+  args.forEach((arg, i) => { val = val.replace('{' + i + '}', arg); });
+  return val;
+}
+
+// Load saved language from cookie
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+// Apply translations to the page
+function applyTranslations() {
+  const t = __;
+
+  // Translate elements with data-i18n attribute
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const translated = t(key);
+    if (translated !== key) {
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        el.placeholder = translated;
+      } else if (el.tagName === 'OPTION') {
+        el.textContent = translated;
+      } else if (el.tagName === 'SELECT') {
+        // Translate each option's text via its data-i18n
+        el.querySelectorAll('option').forEach(opt => {
+          const optKey = opt.getAttribute('data-i18n');
+          if (optKey) {
+            const optTranslated = t(optKey);
+            if (optTranslated !== optKey) opt.textContent = optTranslated;
+          }
+        });
+      } else {
+        el.textContent = translated;
+      }
+    }
+  });
+
+  // Translate page title
+  const titleKey = document.querySelector('title')?.getAttribute('data-i18n');
+  if (titleKey) {
+    const translated = t(titleKey);
+    if (translated !== titleKey) document.title = translated;
+  }
+}
+
+// Switch language instantly without page refresh
+async function switchLanguage(lang) {
+  if (lang === currentLang) return;
+  try {
+    // Switch language via API
+    const res = await fetch(API + '/i18n/switch?language=' + encodeURIComponent(lang), { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to switch language');
+
+    // Load all translations for the new language
+    const allRes = await fetch(API + '/i18n/all?lang=' + encodeURIComponent(lang));
+    const allData = await allRes.json();
+    translations = {};
+    for (const [module, keys] of Object.entries(allData.modules || {})) {
+      translations[module] = keys;
+    }
+
+    currentLang = lang;
+    document.getElementById('langSwitcher').value = lang;
+
+    // Apply translations to static UI elements
+    applyTranslations();
+
+    // Refresh dynamic content
+    refreshAll();
+
+    showToast('Language switched to ' + (lang === 'zh-CN' ? '简体中文' : 'English'));
+  } catch (e) {
+    showToast('Failed to switch language: ' + e.message, 'error');
+  }
+}
+
+// Initialize language on page load — always load translations
+(async function initLanguage() {
+  const savedLang = getCookie('lang');
+  const lang = (savedLang && savedLang !== 'en') ? savedLang : 'en';
+  try {
+    const allRes = await fetch(API + '/i18n/all?lang=' + encodeURIComponent(lang));
+    const allData = await allRes.json();
+    translations = {};
+    for (const [module, keys] of Object.entries(allData.modules || {})) {
+      translations[module] = keys;
+    }
+    currentLang = lang;
+    document.getElementById('langSwitcher').value = lang;
+    if (lang !== 'en') {
+      applyTranslations();
+    }
+  } catch (e) {
+    console.warn('Failed to load translations', e);
+  }
+})();
+</script>
+</body>
+</html>
