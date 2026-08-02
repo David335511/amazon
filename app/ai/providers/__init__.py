@@ -7,6 +7,8 @@ Design decisions:
 - All providers implement the same `LLMProvider` interface.
 """
 
+from __future__ import annotations
+
 from app.ai.providers.anthropic import AnthropicProvider
 from app.ai.providers.ollama import OllamaProvider
 from app.ai.providers.openai import OpenAIClientProvider
