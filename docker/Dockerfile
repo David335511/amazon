@@ -44,7 +44,10 @@ RUN uv pip install --system --no-cache \
     "opentelemetry-instrumentation-sqlalchemy>=0.48b0" \
     "opentelemetry-instrumentation-redis>=0.48b0" \
     "httptools>=0.6.1" \
-    "python-multipart>=0.0.12"
+    "python-multipart>=0.0.12" \
+    "httpx>=0.27.0" \
+    "psycopg2-binary>=2.9.9" \
+    "opentelemetry-exporter-otlp-proto-grpc>=1.27.0"
 
 # ── Stage 3: Runtime ────────────────────────────────────────
 FROM base AS runtime
