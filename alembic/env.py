@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from logging.config import fileConfig
+from typing import Any
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
@@ -71,9 +72,19 @@ async def run_async_migrations() -> None:
     """Run migrations in 'online' mode using the async engine."""
     from sqlalchemy.ext.asyncio import create_async_engine
 
+    # Reuse the app's sslmode handling (asyncpg rejects ``sslmode``; it needs
+    # ``ssl``) so managed Postgres URLs like Neon work during migrations.
+    from app.core.database import _resolve_ssl
+
+    url, ssl_arg = _resolve_ssl(settings.database.url)
+    connect_args: dict[str, Any] = {}
+    if ssl_arg is not None:
+        connect_args["ssl"] = ssl_arg
+
     connectable = create_async_engine(
-        settings.database.url,
+        url,
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
 
     async with connectable.connect() as connection:
