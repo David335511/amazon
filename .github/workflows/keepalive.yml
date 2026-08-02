@@ -1,0 +1,41 @@
+# Keep the free-tier Render service awake.
+#
+# Render's free plan spins the instance down after ~15 minutes of no traffic,
+# causing a ~30s cold start on the next request. This workflow pings the
+# lightweight /health/live endpoint every 5 minutes so the instance stays hot.
+#
+# The timeout (90s) and retries tolerate the cold-start period that can happen
+# if the schedule is ever delayed enough for the instance to sleep.
+#
+# Free-tier GitHub minutes note: a 5-min pinger uses roughly ~300 min/month of
+# runner time (well within the 2000 min free allowance). If the repo is PUBLIC,
+# scheduled workflow minutes are free/unlimited. A more reliable (independent)
+# alternative is UptimeRobot: Monitor type = HTTPS, URL = the health endpoint,
+# interval = 5 min.
+
+name: Keep Render awake
+
+"on":
+  schedule:
+    - cron: "*/5 * * * *"   # every 5 minutes, keeps under the 15-min sleep window
+  workflow_dispatch: {}     # allow manual trigger
+
+jobs:
+  ping:
+    name: Ping health endpoint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit /api/v1/health/live (tolerates cold start)
+        run: |
+          URL="https://amazon-api-sqst.onrender.com/api/v1/health/live"
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 "$URL")
+            echo "ping attempt #$i -> HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "Service is awake."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::Health endpoint did not return 200 after 3 attempts (service may be down)."
+          exit 1

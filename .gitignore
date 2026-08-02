@@ -34,6 +34,9 @@ env/
 # Deployment runbook contains real credentials — never commit
 deploy/DEPLOYMENT.md
 
+# Server SSH keys / connection info — never commit
+utils/
+
 # ── Logs ────────────────────────────────────────────────────
 logs/
 *.log
