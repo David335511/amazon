@@ -47,18 +47,24 @@ def _apply_env_overrides(
     model_cls: type[BaseSettings],
     yaml_section: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    """Drop YAML keys that have a live environment variable override.
+    """Build constructor kwargs from YAML, honoring env-var precedence.
 
-    pydantic-settings gives init kwargs higher priority than env vars, so a
-    YAML value passed as a keyword argument would otherwise shadow the env var.
-    Removing those keys lets the environment win, matching the documented design
-    intent that "env vars override for secrets/deployment-specific values".
+    YAML stores values under field names, but pydantic-settings only accepts
+    init kwargs for *aliased* fields under the alias name (e.g. ``DATABASE_URL``,
+    ``OTEL_EXPORTER_OTLP_ENDPOINT``). We emit alias keys where aliases exist, and
+    skip a value entirely when the matching environment variable is present so
+    that env vars win over YAML.
     """
-    out = dict(yaml_section or {})
+    yaml_data = dict(yaml_section or {})
+    out: dict[str, Any] = {}
     for field_name, field_info in model_cls.model_fields.items():
         alias = field_info.validation_alias
-        if isinstance(alias, str) and os.getenv(alias) is not None:
-            out.pop(field_name, None)
+        alias_name = alias if isinstance(alias, str) else None
+        # A live env var overrides this field — skip the YAML value so env wins.
+        if alias_name is not None and os.getenv(alias_name) is not None:
+            continue
+        if field_name in yaml_data:
+            out[alias_name or field_name] = yaml_data[field_name]
     return out
 
 

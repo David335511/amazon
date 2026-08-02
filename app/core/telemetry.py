@@ -10,7 +10,9 @@ Design decisions:
 
 from __future__ import annotations
 
+import socket
 from typing import Any
+from urllib.parse import urlparse
 
 from fastapi import FastAPI
 from opentelemetry import trace
@@ -39,6 +41,15 @@ def _parse_otlp_headers(raw: str) -> dict[str, str]:
         if sep and key.strip():
             headers[key.strip()] = value.strip()
     return headers
+
+
+def _host_resolves(host: str) -> bool:
+    """Return ``True`` if ``host`` resolves to at least one address."""
+    try:
+        socket.getaddrinfo(host, None)
+        return True
+    except socket.gaierror:
+        return False
 
 
 def configure_telemetry(app: FastAPI) -> None:
@@ -75,18 +86,29 @@ def configure_telemetry(app: FastAPI) -> None:
     # Create tracer provider
     tracer_provider = TracerProvider(resource=resource, sampler=sampler)
 
-    # Add OTLP span exporter if endpoint is configured
+    # Add OTLP span exporter if endpoint is configured AND reachable.
+    # On a plain cloud deploy (no collector / Grafana) the endpoint may be a
+    # placeholder that doesn't resolve (e.g. docker-compose's `otel-collector`).
+    # Skip exporting then to avoid noisy retries, while keeping instrumentation
+    # on so the moment an endpoint is provided traces flow again.
     if settings.telemetry.exporter_otlp_endpoint:
         endpoint = settings.telemetry.exporter_otlp_endpoint
-        # Use TLS for https endpoints (e.g. hosted collectors); plaintext otherwise.
-        insecure = not endpoint.lower().startswith("https")
-        otlp_exporter = OTLPSpanExporter(
-            endpoint=endpoint,
-            headers=_parse_otlp_headers(settings.telemetry.exporter_otlp_headers) or None,
-            insecure=insecure,
-        )
-        span_processor = BatchSpanProcessor(otlp_exporter)
-        tracer_provider.add_span_processor(span_processor)
+        host = urlparse(endpoint).hostname
+        if host and not _host_resolves(host):
+            logger.warning(
+                "OTLP endpoint %r does not resolve; spans will not be exported",
+                endpoint,
+            )
+        else:
+            # Use TLS for https endpoints (e.g. hosted collectors); plaintext otherwise.
+            insecure = not endpoint.lower().startswith("https")
+            otlp_exporter = OTLPSpanExporter(
+                endpoint=endpoint,
+                headers=_parse_otlp_headers(settings.telemetry.exporter_otlp_headers) or None,
+                insecure=insecure,
+            )
+            span_processor = BatchSpanProcessor(otlp_exporter)
+            tracer_provider.add_span_processor(span_processor)
 
     # Set the global tracer provider
     trace.set_tracer_provider(tracer_provider)

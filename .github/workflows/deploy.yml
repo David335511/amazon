@@ -1,0 +1,44 @@
+# ──────────────────────────────────────────────────────────────
+# Deploy to Render on push to main.
+#
+# Triggers Render's Deploy Hook (per-service URL). The hook returns
+# HTTP 200 as soon as Render *accepts* the deploy — it does NOT wait
+# for / report the build result. Watch the build in the Render
+# dashboard (Service > Events) for real status.
+#
+# Setup:
+#   1. Render dashboard → your service → Settings → Deploy Hook → copy URL.
+#   2. GitHub repo → Settings → Secrets & variables → Actions → New secret:
+#        Name: RENDER_DEPLOY_HOOK_URL
+#        Value: <the hook URL>
+#
+# Note: if this service was created by connecting the GitHub repo to
+# Render with "Auto-Deploy" on (render.yaml sets autoDeploy: true), Render
+# already deploys on push and this hook is redundant. To avoid double
+# deploys, either rely on Render's built-in auto-deploy (skip this
+# workflow) or turn Auto-Deploy OFF in Render and drive deploys from here.
+# ──────────────────────────────────────────────────────────────
+name: Deploy to Render
+
+"on":
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    name: Trigger Render deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Render deploy hook
+        env:
+          RENDER_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$RENDER_HOOK" ]; then
+            echo "::error::The RENDER_DEPLOY_HOOK_URL secret is not set."
+            echo "Add it under Settings > Secrets & variables > Actions."
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error \
+            --request POST "$RENDER_HOOK"
+          echo "Render accepted the deploy. Check Service > Events in Render."

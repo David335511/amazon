@@ -20,7 +20,9 @@ class FeeComponent(BaseModel):
 
     name: str = Field(..., description="Fee name (e.g., 'Referral Fee', 'FBA Fee')")
     category: str = Field(..., description="Category: fixed, percentage, or variable")
-    amount: Decimal = Field(..., ge=0, description="Fee amount in currency")
+    amount: Decimal = Field(
+        ..., description="Fee amount in currency. Negative = savings/incentive.",
+    )
     description: str | None = Field(None, description="How this fee was calculated")
 
 

@@ -11,7 +11,7 @@ Design decisions:
 
 from __future__ import annotations
 
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
 from app.profit.config import DEFAULT_PROFIT_CONFIG, ProfitConfig
@@ -21,6 +21,11 @@ from app.profit.models import (
     ProfitInput,
     ProfitOutput,
 )
+
+
+def _money(value: Any) -> Decimal:
+    """Round a monetary amount to the nearest cent."""
+    return Decimal(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 class ProfitEngine:
@@ -73,7 +78,7 @@ class ProfitEngine:
 
         # 1. Referral fee
         ref_pct, ref_min = self._get_referral_fee(input_data, category)
-        referral_fee_per_unit = max(price * ref_pct / 100, ref_min)
+        referral_fee_per_unit = _money(max(price * ref_pct / 100, ref_min))
         total_referral_fee = referral_fee_per_unit * qty
         fees.append(FeeComponent(
             name="Referral Fee",
@@ -84,7 +89,9 @@ class ProfitEngine:
         ))
 
         # 2. FBA fulfillment fee
-        fba_fee_per_unit = input_data.fba_fulfillment_fee or self._config.fees.large_standard_fulfillment
+        fba_fee_per_unit = _money(
+            input_data.fba_fulfillment_fee or self._config.fees.large_standard_fulfillment
+        )
         total_fba_fee = fba_fee_per_unit * qty
         if fba_fee_per_unit > 0:
             fees.append(FeeComponent(
@@ -95,7 +102,7 @@ class ProfitEngine:
             ))
 
         # 3. FBA storage fee
-        storage_fee_per_unit = input_data.fba_storage_fee or Decimal("0")
+        storage_fee_per_unit = _money(input_data.fba_storage_fee or Decimal("0"))
         total_storage_fee = storage_fee_per_unit * qty
         if storage_fee_per_unit > 0:
             fees.append(FeeComponent(
@@ -106,7 +113,7 @@ class ProfitEngine:
             ))
 
         # 4. Closing fee
-        total_closing_fee = input_data.closing_fee * qty
+        total_closing_fee = _money(input_data.closing_fee * qty)
         if input_data.closing_fee > 0:
             fees.append(FeeComponent(
                 name="Closing Fee",
@@ -116,7 +123,7 @@ class ProfitEngine:
             ))
 
         # 5. Shipping cost
-        total_shipping = input_data.shipping_cost * qty
+        total_shipping = _money(input_data.shipping_cost * qty)
         if input_data.shipping_cost > 0:
             fees.append(FeeComponent(
                 name="Shipping Cost",
@@ -126,7 +133,7 @@ class ProfitEngine:
             ))
 
         # 6. Prep cost
-        total_prep = input_data.prep_cost * qty
+        total_prep = _money(input_data.prep_cost * qty)
         if input_data.prep_cost > 0:
             fees.append(FeeComponent(
                 name="Prep/Labeling Cost",
@@ -136,7 +143,7 @@ class ProfitEngine:
             ))
 
         # 7. Other costs
-        total_other = input_data.other_costs * qty
+        total_other = _money(input_data.other_costs * qty)
         if input_data.other_costs > 0:
             fees.append(FeeComponent(
                 name="Other Costs",
@@ -147,7 +154,7 @@ class ProfitEngine:
 
         # 8. Sales tax
         tax_percent = input_data.sales_tax_percent
-        total_tax = total_revenue * tax_percent / 100
+        total_tax = _money(total_revenue * tax_percent / 100)
         if tax_percent > 0:
             fees.append(FeeComponent(
                 name="Sales Tax",
@@ -157,7 +164,7 @@ class ProfitEngine:
             ))
 
         # 9. Coupon discount
-        total_coupon = input_data.coupon_discount * qty
+        total_coupon = _money(input_data.coupon_discount * qty)
         if input_data.coupon_discount > 0:
             fees.append(FeeComponent(
                 name="Coupon Discount",
@@ -167,7 +174,7 @@ class ProfitEngine:
             ))
 
         # ── Discounts & Incentives (negative fees) ──────────
-        total_cashback = total_revenue * input_data.cashback_percent / 100
+        total_cashback = _money(total_revenue * input_data.cashback_percent / 100)
         if input_data.cashback_percent > 0:
             fees.append(FeeComponent(
                 name="Cashback (savings)",
@@ -176,7 +183,7 @@ class ProfitEngine:
                 description=f"{input_data.cashback_percent}% of ${total_revenue} = -${total_cashback:.2f}",
             ))
 
-        total_cc_rewards = total_revenue * input_data.credit_card_rewards_percent / 100
+        total_cc_rewards = _money(total_revenue * input_data.credit_card_rewards_percent / 100)
         if input_data.credit_card_rewards_percent > 0:
             fees.append(FeeComponent(
                 name="Credit Card Rewards (savings)",

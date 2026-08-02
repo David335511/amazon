@@ -116,7 +116,7 @@ class TestRealWorldProducts:
 
         # Break-even price should be reasonable
         assert result.break_even_price > Decimal("0")
-        assert result.break_even_price < result.amazon_price or not result.is_profitable
+        assert result.break_even_price < result.revenue_per_unit or not result.is_profitable
 
     # ── Case 4: Product with Coupon + Cashback ──────────────
     # Tests that discounts and incentives are correctly applied

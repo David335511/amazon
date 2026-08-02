@@ -9,9 +9,12 @@ Design decisions:
 
 from __future__ import annotations
 
+import ssl as ssl_module
 from collections.abc import AsyncGenerator
 from typing import Any
 
+from sqlalchemy import make_url
+from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -22,18 +25,45 @@ from sqlalchemy.ext.asyncio import (
 from app.config import settings
 
 
+def _resolve_ssl(database_url: str) -> tuple[URL, Any]:
+    """Resolve libpq ``sslmode`` from a URL into an asyncpg ``ssl`` argument.
+
+    SQLAlchemy passes URL query params through to asyncpg as keywords, but
+    asyncpg rejects ``sslmode`` (it expects ``ssl``). We consume ``sslmode``
+    here and strip it from the URL so managed Postgres URLs (e.g. Neon)
+    work unchanged: ``?sslmode=require`` -> ``ssl=True``, ``verify-*`` -> a
+    verification SSLContext, ``disable``/absent -> no SSL.
+    """
+    url = make_url(database_url)
+    query = dict(url.query)
+    sslmode = query.pop("sslmode", None)
+    if not sslmode or sslmode == "disable":
+        return url, None
+    if sslmode == "require":
+        return url.set(query=query), True
+    context = ssl_module.create_default_context()
+    if sslmode != "verify-full":
+        context.check_hostname = False
+    context.verify_mode = ssl_module.CERT_REQUIRED
+    return url.set(query=query), context
+
+
 def create_engine() -> AsyncEngine:
     """Create the async SQLAlchemy engine from current settings."""
+    url, ssl_arg = _resolve_ssl(settings.database.url)
+    connect_args: dict[str, Any] = {
+        "statement_cache_size": 0,  # Disable asyncpg statement cache
+    }
+    if ssl_arg is not None:
+        connect_args["ssl"] = ssl_arg
     return create_async_engine(
-        settings.database.url,
+        url,
         pool_size=settings.database.pool_size,
         max_overflow=settings.database.max_overflow,
         echo=settings.database.echo,
         pool_pre_ping=settings.database.pool_pre_ping,
         pool_recycle=settings.database.pool_recycle,
-        connect_args={
-            "statement_cache_size": 0,  # Disable asyncpg statement cache
-        },
+        connect_args=connect_args,
     )
 
 
