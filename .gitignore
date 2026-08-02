@@ -31,6 +31,9 @@ env/
 .env.local
 .env.production
 
+# Deployment runbook contains real credentials — never commit
+deploy/DEPLOYMENT.md
+
 # ── Logs ────────────────────────────────────────────────────
 logs/
 *.log
