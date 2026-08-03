@@ -30,6 +30,12 @@ from app.domain.services.order_service import OrderService
 from app.domain.services.product_service import ProductService
 from app.events import EventBus, EventBusConfig, InMemoryEventBus
 from app.features import FeatureConfig, FeatureManager, FeatureRepository, build_signal_provider
+from app.forecasting import (
+    ForecastConfig,
+    ForecastingManager,
+    ForecastingRepository,
+    build_models,
+)
 from app.infrastructure.repositories.order_repository import OrderRepository
 from app.infrastructure.repositories.product_repository import ProductRepository
 from app.marketplaces.manager import MarketplaceManager
@@ -233,6 +239,33 @@ def get_feature_manager(
         repo,
         config=_feature_config,
         signal_provider=_feature_signal_provider,
+    )
+
+
+# Forecasting system. The forecast config and model registry are shared and
+# stateless; a new manager is built per request with the DB session.
+_forecast_config: Any | None = None
+_forecast_models: Any | None = None
+
+
+def get_forecasting_manager(
+    db: AsyncSession = Depends(get_db),
+) -> ForecastingManager:
+    """Build a `ForecastingManager` bound to the request's DB session.
+
+    This is the ONLY entry point the rest of the platform uses to forecast
+    price / ROI / profit / inventory / sales / Buy Box / competition.
+    """
+    global _forecast_config, _forecast_models
+    if _forecast_config is None:
+        _forecast_config = ForecastConfig.model_validate(settings.forecasting)
+    if _forecast_models is None:
+        _forecast_models = build_models(_forecast_config)
+    repo = ForecastingRepository(db)
+    return ForecastingManager(
+        repo,
+        config=_forecast_config,
+        models=_forecast_models,
     )
 
 

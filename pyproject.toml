@@ -69,6 +69,15 @@ documents = [
     "pytesseract>=0.3.10",
 ]
 
+# Optional: machine-learning forecasting models (linear regression, gradient
+# boosting on lagged features). The forecasting platform works without this
+# extra (pure-stdlib statistical, LLM-reasoning and ensemble models). Install
+# with:
+#   pip install '.[forecasting]'
+forecasting = [
+    "scikit-learn>=1.5.0",
+]
+
 [tool.ruff]
 target-version = "py312"
 line-length = 100

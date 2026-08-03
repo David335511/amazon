@@ -196,3 +196,33 @@ feature_store:
   # providers plug in here.
   signal_provider: local
   max_batch_size: 100
+
+forecasting:
+  # Forecasting platform. Predicts future price / ROI / profit / inventory /
+  # sales / Buy Box ownership / competition from historical series. Each
+  # forecast returns a point prediction, a 95% confidence interval, an
+  # explanation and historical accuracy (MAE/MAPE/RMSE/bias from recorded
+  # actuals). Models are pluggable behind one interface; the ensemble combines
+  # all available members by inverse-variance weighting.
+  enabled: true
+  # Model used when a request does not name one: "ensemble" (default) or any
+  # registered model name (e.g. "moving_average", "linear_trend",
+  # "llm_reasoning").
+  default_model: ensemble
+  max_horizon: 36        # max look-ahead periods per request
+  max_batch_size: 50     # max items per batch-forecast call
+  # ML models (sklearn) are only registered when enable_ml is true AND
+  # scikit-learn is installed (`pip install '.[forecasting]'`).
+  enable_ml: true
+  # LLM reasoning always runs (deterministic narrative) unless toggled off;
+  # a real provider plugs in via llm_provider.
+  enable_llm: true
+  llm_provider: reasoning
+  # Members used by the ensemble (subset of registered model names).
+  ensemble_members:
+    - moving_average
+    - exponential_smoothing
+    - linear_trend
+    - seasonal_average
+    - persistence
+    - llm_reasoning
