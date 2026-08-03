@@ -1124,7 +1124,7 @@ async function switchLanguage(lang) {
     if (!res.ok) throw new Error('Failed to switch language');
 
     // Load all translations for the new language
-    const allRes = await fetch(API + '/i18n/all?lang=' + encodeURIComponent(lang));
+    const allRes = await fetch(API + '/i18n/bundle?lang=' + encodeURIComponent(lang));
     const allData = await allRes.json();
     translations = {};
     for (const [module, keys] of Object.entries(allData.modules || {})) {
@@ -1151,7 +1151,7 @@ async function switchLanguage(lang) {
   const savedLang = getCookie('lang');
   const lang = (savedLang && savedLang !== 'en') ? savedLang : 'en';
   try {
-    const allRes = await fetch(API + '/i18n/all?lang=' + encodeURIComponent(lang));
+    const allRes = await fetch(API + '/i18n/bundle?lang=' + encodeURIComponent(lang));
     const allData = await allRes.json();
     translations = {};
     for (const [module, keys] of Object.entries(allData.modules || {})) {
