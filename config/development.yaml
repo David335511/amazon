@@ -184,3 +184,15 @@ documents:
   enable_text: true
   http_base_url: ""
   http_api_key: ""
+
+feature_store:
+  # Feature engineering platform. Computed metrics are stored once and reused
+  # until stale (computed_at + ttl), then recomputed. Each value records its
+  # method, timestamp, confidence, version and lineage.
+  enabled: true
+  # Default freshness TTL when a feature does not declare its own.
+  default_ttl_seconds: 3600
+  # Signal acquisition: "local" (default). Future DB/HTTP/feature-server
+  # providers plug in here.
+  signal_provider: local
+  max_batch_size: 100

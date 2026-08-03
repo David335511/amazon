@@ -209,6 +209,9 @@ class Settings(BaseSettings):
     # Raw YAML block for the document intelligence system. Validated lazily into
     # `app.documents.config.DocumentConfig` by the DI layer.
     documents: dict[str, Any] = Field(default_factory=dict)
+    # Raw YAML block for the feature engineering platform. Validated lazily into
+    # `app.features.config.FeatureConfig` by the DI layer.
+    feature_store: dict[str, Any] = Field(default_factory=dict)
     # API security (Phase 0). Disabled by default so local dev is unaffected;
     # set `enabled: true` and provide API keys to protect the API.
     security: SecurityConfig = Field(default_factory=SecurityConfig)
@@ -277,6 +280,7 @@ class Settings(BaseSettings):
             memory=dict(yaml_data.get("memory", {})),
             vision=dict(yaml_data.get("vision", {})),
             documents=dict(yaml_data.get("documents", {})),
+            feature_store=dict(yaml_data.get("feature_store", {})),
             event_bus=event_bus_cfg,
             security=security_cfg,
         )

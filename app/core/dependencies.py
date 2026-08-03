@@ -29,6 +29,7 @@ from app.documents import (
 from app.domain.services.order_service import OrderService
 from app.domain.services.product_service import ProductService
 from app.events import EventBus, EventBusConfig, InMemoryEventBus
+from app.features import FeatureConfig, FeatureManager, FeatureRepository, build_signal_provider
 from app.infrastructure.repositories.order_repository import OrderRepository
 from app.infrastructure.repositories.product_repository import ProductRepository
 from app.marketplaces.manager import MarketplaceManager
@@ -206,6 +207,33 @@ def get_memory_manager(
         config=cfg,
     )
 
+
+
+# Feature engineering system. The feature config and signal provider are shared
+# and stateless; a new manager is built per request with the DB session.
+_feature_config: Any | None = None
+_feature_signal_provider: Any | None = None
+
+
+def get_feature_manager(
+    db: AsyncSession = Depends(get_db),
+) -> FeatureManager:
+    """Build a `FeatureManager` bound to the request's DB session.
+
+    This is the ONLY entry point the rest of the platform uses to compute,
+    store, refresh and retrieve engineered feature values.
+    """
+    global _feature_config, _feature_signal_provider
+    if _feature_config is None:
+        _feature_config = FeatureConfig.model_validate(settings.feature_store)
+    if _feature_signal_provider is None:
+        _feature_signal_provider = build_signal_provider(_feature_config)
+    repo = FeatureRepository(db)
+    return FeatureManager(
+        repo,
+        config=_feature_config,
+        signal_provider=_feature_signal_provider,
+    )
 
 
 class Container:

@@ -6,6 +6,7 @@ from app.api.v1.agent import router as agent_router
 from app.api.v1.analytics import router as analytics_router
 from app.api.v1.assistant import router as assistant_router
 from app.api.v1.documents import router as documents_router
+from app.api.v1.features import router as features_router
 from app.api.v1.health import router as health_router
 from app.api.v1.i18n import router as i18n_router
 from app.api.v1.marketplaces import router as marketplaces_router
@@ -26,6 +27,7 @@ router.include_router(agent_router)
 router.include_router(analytics_router)
 router.include_router(assistant_router)
 router.include_router(documents_router)
+router.include_router(features_router)
 router.include_router(i18n_router)
 router.include_router(marketplaces_router)
 router.include_router(memory_router)
