@@ -1,59 +1,102 @@
 {
-  "title": "Product Intelligence Dashboard",
-  "subtitle": "A live overview of your catalog, revenue and opportunities",
-  "welcome": "Welcome back, {name}!",
-  "last_updated": "Last updated: {time}",
+  "agent_status": "Agent Status",
+  "ai_recommendation": "Score with AI",
+  "alerts": {
+    "empty": "You're all caught up!",
+    "new": "New alert",
+    "title": "Alerts"
+  },
+  "all_products": "All Products",
+  "bsr_history": "BSR History",
+  "busy": "busy",
+  "buy": "BUY",
+  "chart": {
+    "orders_by_marketplace": "Orders by marketplace",
+    "profit_margin": "Profit margin",
+    "revenue_trend": "Revenue over time",
+    "sales_by_category": "Sales by category",
+    "top_products": "Top products"
+  },
+  "completed": "completed",
+  "cycles": "Cycles",
+  "decisions_today": "Decisions Today",
+  "depth": "Depth",
+  "done": "done",
+  "empty": "No data available yet. Add products to get started.",
+  "enqueued": "Enqueued",
+  "enter_asin": "Enter ASIN",
+  "evaluate_product": "Evaluate Product",
+  "export": "Export report",
+  "failed": "failed",
+  "idle": "idle",
   "kpi": {
-    "revenue": "Revenue",
-    "profit": "Profit",
+    "avg_margin": "Avg. Margin",
+    "customers": "Customers",
     "orders": "Orders",
     "products": "Products",
-    "suppliers": "Suppliers",
-    "customers": "Customers",
-    "avg_margin": "Avg. Margin",
-    "roi": "ROI"
+    "profit": "Profit",
+    "revenue": "Revenue",
+    "roi": "ROI",
+    "suppliers": "Suppliers"
   },
-  "trend": {
-    "revenue": "Revenue trend",
-    "profit": "Profit trend",
-    "sales": "Sales trend",
-    "orders": "Orders trend",
-    "last_30_days": "Last 30 days"
-  },
-  "chart": {
-    "revenue_trend": "Revenue over time",
-    "profit_margin": "Profit margin",
-    "sales_by_category": "Sales by category",
-    "top_products": "Top products",
-    "orders_by_marketplace": "Orders by marketplace"
-  },
-  "sections": {
-    "recent_orders": "Recent orders",
-    "recent_activity": "Recent activity",
-    "top_products": "Top products",
-    "top_suppliers": "Top suppliers",
-    "low_stock": "Low stock alerts",
-    "alerts": "Alerts",
-    "opportunities": "Hidden opportunities",
-    "forecasts": "Sales forecasts"
-  },
-  "alerts": {
-    "title": "Alerts",
-    "empty": "You're all caught up!",
-    "new": "New alert"
-  },
-  "low_stock": {
-    "title": "Low stock",
-    "none": "No low-stock products",
-    "reorder": "Reorder"
-  },
-  "opportunities": {
-    "title": "Hidden opportunities",
-    "view": "View opportunities",
-    "none": "No opportunities detected"
-  },
-  "empty": "No data available yet. Add products to get started.",
+  "last_updated": "Last updated: {time}",
   "loading": "Loading dashboard...",
+  "low_stock": {
+    "none": "No low-stock products",
+    "reorder": "Reorder",
+    "title": "Low stock"
+  },
+  "no_cycles": "No cycles yet",
+  "no_decisions": "No decisions yet. Start the agent to see results.",
+  "no_workers": "No workers running.",
+  "not_started": "Not started",
+  "opportunities": {
+    "none": "No opportunities detected",
+    "title": "Hidden opportunities",
+    "view": "View opportunities"
+  },
+  "pause_agent": "Pause",
+  "pricing_history": "Pricing History",
+  "product_detail": "Product Detail",
+  "queue_depth": "Queue Depth",
+  "queue_empty": "Queue is empty.",
+  "quick_actions": "Quick Actions",
+  "recent_decisions": "Recent Decisions",
   "refresh": "Refresh dashboard",
-  "export": "Export report"
+  "resume_agent": "Resume",
+  "roi": "ROI",
+  "run": "Run",
+  "running": "Running",
+  "score": "Evaluate",
+  "score_label": "Score",
+  "search_placeholder": "Search ASIN or product...",
+  "sections": {
+    "alerts": "Alerts",
+    "forecasts": "Sales forecasts",
+    "low_stock": "Low stock alerts",
+    "opportunities": "Hidden opportunities",
+    "recent_activity": "Recent activity",
+    "recent_orders": "Recent orders",
+    "top_products": "Top products",
+    "top_suppliers": "Top suppliers"
+  },
+  "start_agent": "Start Agent",
+  "started": "Started",
+  "stop_agent": "Stop",
+  "stopped": "Stopped",
+  "subtitle": "A live overview of your catalog, revenue and opportunities",
+  "succeeded": "succeeded",
+  "title": "Product Intelligence Dashboard",
+  "trend": {
+    "last_30_days": "Last 30 days",
+    "orders": "Orders trend",
+    "profit": "Profit trend",
+    "revenue": "Revenue trend",
+    "sales": "Sales trend"
+  },
+  "unknown": "Unknown",
+  "view_details": "View Details",
+  "watch": "WATCH",
+  "welcome": "Welcome back, {name}!",
+  "workers": "Workers"
 }

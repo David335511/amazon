@@ -1,52 +1,57 @@
 {
-  "title": "AI Agents",
-  "subtitle": "Multi-agent orchestration for research, pricing and profit optimization",
-  "status": {
-    "idle": "Idle",
-    "running": "Running",
-    "completed": "Completed",
-    "failed": "Failed",
-    "paused": "Paused",
-    "pending": "Pending",
-    "cancelled": "Cancelled"
-  },
-  "roles": {
-    "planner": "Planner",
-    "research": "Research",
-    "matching": "Matching",
-    "forecast": "Forecasting",
-    "pricing": "Pricing",
-    "profit": "Profit",
-    "risk": "Risk",
-    "negotiation": "Negotiation",
-    "inventory": "Inventory",
-    "reporting": "Reporting"
-  },
   "actions": {
+    "pause": "Pause",
+    "restart": "Restart",
+    "resume": "Resume",
+    "run_now": "Run now",
     "start": "Start pipeline",
     "stop": "Stop",
-    "pause": "Pause",
-    "resume": "Resume",
-    "restart": "Restart",
-    "view_trace": "View trace",
-    "run_now": "Run now"
+    "view_trace": "View trace"
   },
+  "confirm_stop": "Stop the running pipeline? In-progress tasks will be interrupted.",
+  "empty": "No agents configured.",
   "metrics": {
-    "run_time": "Run time",
-    "tasks_completed": "Tasks completed",
-    "success_rate": "Success rate",
     "agents_active": "Agents active",
-    "evaluation_score": "Evaluation score"
+    "evaluation_score": "Evaluation score",
+    "run_time": "Run time",
+    "success_rate": "Success rate",
+    "tasks_completed": "Tasks completed"
+  },
+  "queue_depth": "Queue Stats",
+  "roles": {
+    "forecast": "Forecasting",
+    "inventory": "Inventory",
+    "matching": "Matching",
+    "negotiation": "Negotiation",
+    "planner": "Planner",
+    "pricing": "Pricing",
+    "profit": "Profit",
+    "reporting": "Reporting",
+    "research": "Research",
+    "risk": "Risk"
   },
   "runs": {
-    "title": "Pipeline runs",
+    "completed_at": "Completed",
     "no_runs": "No pipeline runs yet. Start a pipeline to begin.",
     "run_id": "Run ID",
     "started_at": "Started",
-    "completed_at": "Completed",
-    "wave": "Wave {n}",
-    "view_details": "View details"
+    "title": "Pipeline runs",
+    "view_details": "View details",
+    "wave": "Wave {n}"
   },
-  "confirm_stop": "Stop the running pipeline? In-progress tasks will be interrupted.",
-  "empty": "No agents configured."
+  "status": {
+    "busy": "Busy",
+    "cancelled": "Cancelled",
+    "completed": "Completed",
+    "failed": "Failed",
+    "idle": "Idle",
+    "paused": "Paused",
+    "pending": "Pending",
+    "running": "Running",
+    "stopped": "Stopped"
+  },
+  "status_title": "Status",
+  "subtitle": "Multi-agent orchestration for research, pricing and profit optimization",
+  "tasks_processed": "Tasks",
+  "title": "AI Agents"
 }

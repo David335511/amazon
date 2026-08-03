@@ -1,72 +1,73 @@
 {
-  "title": "Products",
-  "subtitle": "Manage and optimize your product catalog",
-  "total": "{count} products",
-  "search_placeholder": "Search by name, SKU or ASIN...",
-  "fields": {
-    "sku": "SKU",
-    "asin": "ASIN",
-    "name": "Product name",
-    "brand": "Brand",
-    "category": "Category",
-    "price": "Price",
-    "cost": "Cost",
-    "profit": "Profit",
-    "margin": "Margin",
-    "stock": "Stock",
-    "supplier": "Supplier",
-    "marketplace": "Marketplace",
-    "status": "Status",
-    "created_at": "Created",
-    "updated_at": "Updated",
-    "weight": "Weight",
-    "dimensions": "Dimensions",
-    "barcode": "Barcode",
-    "description": "Description"
-  },
-  "status": {
-    "active": "Active",
-    "inactive": "Inactive",
-    "draft": "Draft",
-    "published": "Published",
-    "out_of_stock": "Out of stock",
-    "low_stock": "Low stock",
-    "discontinued": "Discontinued"
-  },
   "actions": {
     "add": "Add product",
-    "edit": "Edit",
+    "bulk_update": "Bulk update",
     "delete": "Delete",
     "duplicate": "Duplicate",
+    "edit": "Edit",
     "export": "Export",
     "import": "Import",
-    "bulk_update": "Bulk update",
-    "view_details": "View details",
-    "price_history": "Price history"
+    "price_history": "Price history",
+    "view_details": "View details"
+  },
+  "asin": "ASIN",
+  "confirm_delete": "Are you sure you want to delete this product?",
+  "fields": {
+    "asin": "ASIN",
+    "barcode": "Barcode",
+    "brand": "Brand",
+    "category": "Category",
+    "cost": "Cost",
+    "created_at": "Created",
+    "description": "Description",
+    "dimensions": "Dimensions",
+    "margin": "Margin",
+    "marketplace": "Marketplace",
+    "name": "Product name",
+    "price": "Price",
+    "profit": "Profit",
+    "sku": "SKU",
+    "status": "Status",
+    "stock": "Stock",
+    "supplier": "Supplier",
+    "updated_at": "Updated",
+    "weight": "Weight"
   },
   "form": {
-    "title_add": "Add product",
-    "title_edit": "Edit product",
-    "price": "Sale price",
+    "brand": "Brand",
+    "category": "Category",
     "cost": "Unit cost",
+    "description": "Description",
+    "image_url": "Image URL",
+    "price": "Sale price",
     "stock": "Stock quantity",
     "supplier": "Supplier",
-    "category": "Category",
-    "brand": "Brand",
-    "description": "Description",
-    "image_url": "Image URL"
+    "title_add": "Add product",
+    "title_edit": "Edit product"
   },
-  "validation": {
-    "required_name": "Product name is required",
-    "invalid_price": "Please enter a valid price",
-    "invalid_stock": "Please enter a valid stock quantity",
-    "required_sku": "SKU is required"
+  "search_placeholder": "Search by name, SKU or ASIN...",
+  "status": {
+    "active": "Active",
+    "discontinued": "Discontinued",
+    "draft": "Draft",
+    "inactive": "Inactive",
+    "low_stock": "Low stock",
+    "out_of_stock": "Out of stock",
+    "published": "Published"
   },
+  "subtitle": "Manage and optimize your product catalog",
   "table": {
+    "bulk_actions": "Bulk actions",
     "no_products": "No products match your filters.",
     "no_results": "No products found",
-    "select_all": "Select all",
-    "bulk_actions": "Bulk actions"
+    "select_all": "Select all"
   },
-  "confirm_delete": "Are you sure you want to delete this product?"
+  "title": "Products",
+  "total": "{count} products",
+  "validation": {
+    "invalid_price": "Please enter a valid price",
+    "invalid_stock": "Please enter a valid stock quantity",
+    "required_name": "Product name is required",
+    "required_sku": "SKU is required"
+  }
 }

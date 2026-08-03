@@ -1,53 +1,57 @@
 {
-  "title": "数据分析",
-  "subtitle": "深入洞察业绩与趋势",
-  "metric": {
-    "revenue": "收入",
-    "profit": "利润",
-    "roi": "投资回报率",
-    "conversion_rate": "转化率",
-    "avg_order_value": "平均订单金额",
-    "units_sold": "销量",
-    "profit_margin": "利润率",
-    "gross_sales": "总销售额",
-    "refunds": "退款"
-  },
-  "period": {
-    "today": "今天",
-    "week": "本周",
-    "month": "本月",
-    "quarter": "本季度",
-    "year": "今年",
-    "all_time": "全部时间",
-    "custom": "自定义范围"
-  },
+  "available_metrics": "可用指标",
   "chart": {
-    "sales_trend": "销量趋势",
-    "revenue_by_category": "各品类收入",
-    "profit_by_product": "各商品利润",
-    "top_sellers": "畅销商品",
     "orders_over_time": "订单走势",
-    "supplier_performance": "供应商表现"
+    "profit_by_product": "各商品利润",
+    "revenue_by_category": "各品类收入",
+    "sales_trend": "销量趋势",
+    "supplier_performance": "供应商表现",
+    "top_sellers": "畅销商品"
   },
-  "table": {
-    "product": "商品",
-    "revenue": "收入",
-    "profit": "利润",
-    "units": "数量",
-    "roi": "投资回报率",
-    "margin": "利润率",
-    "trend": "趋势"
-  },
+  "check_coverage": "检查覆盖",
+  "compare": "与上一周期对比",
+  "data_coverage": "数据覆盖",
+  "export": "导出数据",
   "filters": {
-    "period": "时间范围",
+    "apply": "应用筛选",
     "category": "品类",
     "marketplace": "平台",
-    "supplier": "供应商",
-    "apply": "应用筛选",
-    "reset": "重置"
+    "period": "时间范围",
+    "reset": "重置",
+    "supplier": "供应商"
   },
-  "export": "导出数据",
-  "compare": "与上一周期对比",
+  "loading": "正在加载数据分析...",
+  "metric": {
+    "avg_order_value": "平均订单金额",
+    "conversion_rate": "转化率",
+    "gross_sales": "总销售额",
+    "profit": "利润",
+    "profit_margin": "利润率",
+    "refunds": "退款",
+    "revenue": "收入",
+    "roi": "投资回报率",
+    "units_sold": "销量"
+  },
   "no_data": "所选时间段内暂无数据分析数据。",
-  "loading": "正在加载数据分析..."
+  "period": {
+    "all_time": "全部时间",
+    "custom": "自定义范围",
+    "month": "本月",
+    "quarter": "本季度",
+    "today": "今天",
+    "week": "本周",
+    "year": "今年"
+  },
+  "select_product": "请选择商品以查看数据覆盖。",
+  "subtitle": "深入洞察业绩与趋势",
+  "table": {
+    "margin": "利润率",
+    "product": "商品",
+    "profit": "利润",
+    "revenue": "收入",
+    "roi": "投资回报率",
+    "trend": "趋势",
+    "units": "数量"
+  },
+  "title": "数据分析"
 }

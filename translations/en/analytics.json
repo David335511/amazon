@@ -1,53 +1,57 @@
 {
-  "title": "Analytics",
-  "subtitle": "Deep insights into performance and trends",
-  "metric": {
-    "revenue": "Revenue",
-    "profit": "Profit",
-    "roi": "ROI",
-    "conversion_rate": "Conversion rate",
-    "avg_order_value": "Avg. order value",
-    "units_sold": "Units sold",
-    "profit_margin": "Profit margin",
-    "gross_sales": "Gross sales",
-    "refunds": "Refunds"
-  },
-  "period": {
-    "today": "Today",
-    "week": "This week",
-    "month": "This month",
-    "quarter": "This quarter",
-    "year": "This year",
-    "all_time": "All time",
-    "custom": "Custom range"
-  },
+  "available_metrics": "Available Metrics",
   "chart": {
-    "sales_trend": "Sales trend",
-    "revenue_by_category": "Revenue by category",
-    "profit_by_product": "Profit by product",
-    "top_sellers": "Top sellers",
     "orders_over_time": "Orders over time",
-    "supplier_performance": "Supplier performance"
+    "profit_by_product": "Profit by product",
+    "revenue_by_category": "Revenue by category",
+    "sales_trend": "Sales trend",
+    "supplier_performance": "Supplier performance",
+    "top_sellers": "Top sellers"
   },
-  "table": {
-    "product": "Product",
-    "revenue": "Revenue",
-    "profit": "Profit",
-    "units": "Units",
-    "roi": "ROI",
-    "margin": "Margin",
-    "trend": "Trend"
-  },
+  "check_coverage": "Check Coverage",
+  "compare": "Compare to previous period",
+  "data_coverage": "Data Coverage",
+  "export": "Export data",
   "filters": {
-    "period": "Time period",
+    "apply": "Apply filters",
     "category": "Category",
     "marketplace": "Marketplace",
-    "supplier": "Supplier",
-    "apply": "Apply filters",
-    "reset": "Reset"
+    "period": "Time period",
+    "reset": "Reset",
+    "supplier": "Supplier"
   },
-  "export": "Export data",
-  "compare": "Compare to previous period",
+  "loading": "Loading analytics...",
+  "metric": {
+    "avg_order_value": "Avg. order value",
+    "conversion_rate": "Conversion rate",
+    "gross_sales": "Gross sales",
+    "profit": "Profit",
+    "profit_margin": "Profit margin",
+    "refunds": "Refunds",
+    "revenue": "Revenue",
+    "roi": "ROI",
+    "units_sold": "Units sold"
+  },
   "no_data": "No analytics data available for the selected period.",
-  "loading": "Loading analytics..."
+  "period": {
+    "all_time": "All time",
+    "custom": "Custom range",
+    "month": "This month",
+    "quarter": "This quarter",
+    "today": "Today",
+    "week": "This week",
+    "year": "This year"
+  },
+  "select_product": "Select a product to view data coverage.",
+  "subtitle": "Deep insights into performance and trends",
+  "table": {
+    "margin": "Margin",
+    "product": "Product",
+    "profit": "Profit",
+    "revenue": "Revenue",
+    "roi": "ROI",
+    "trend": "Trend",
+    "units": "Units"
+  },
+  "title": "Analytics"
 }

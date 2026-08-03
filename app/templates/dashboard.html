@@ -240,7 +240,7 @@
   <!-- ═══════ AGENT TAB ═══════ -->
   <div id="tab-agent" class="tab-content">
     <div class="grid grid-3" id="agentCards">
-      <div class="card"><div class="card-title" data-i18n="agent.status">Status</div><div class="card-value" id="agStatus">—</div><div class="card-sub" id="agRunId"></div></div>
+      <div class="card"><div class="card-title" data-i18n="agent.status_title">Status</div><div class="card-value" id="agStatus">—</div><div class="card-sub" id="agRunId"></div></div>
       <div class="card"><div class="card-title" data-i18n="dashboard.cycles">Cycles</div><div class="card-value" id="agCycles">—</div><div class="card-sub" id="agLastCycle"></div></div>
       <div class="card"><div class="card-title" data-i18n="agent.tasks_processed">Tasks</div><div class="card-value" id="agTasks">—</div><div class="card-sub" id="agTaskDetail"></div></div>
     </div>
@@ -450,25 +450,26 @@ async function loadAgentStatus() {
   try {
     const data = await api('GET', '/agent/status');
     const status = (data.status || 'stopped').toLowerCase();
+    const statusLabel = __('agent.status.' + status) || status.toUpperCase();
     const badge = document.getElementById('agentStatusBadge');
-    badge.textContent = '● ' + status.toUpperCase();
+    badge.textContent = '● ' + statusLabel;
     badge.className = 'status-badge status-' + status;
 
-    document.getElementById('ovAgentStatus').textContent = status.toUpperCase();
+    document.getElementById('ovAgentStatus').textContent = statusLabel;
     document.getElementById('ovAgentStatus').className = 'card-value ' + (
       status === 'running' ? 'green' : status === 'paused' ? 'yellow' : 'red'
     );
     document.getElementById('ovAgentUptime').textContent = data.started_at
-      ? 'Started ' + timeAgo(data.started_at) : 'Not started';
+      ? __('dashboard.started') + ' ' + timeAgo(data.started_at) : __('dashboard.not_started');
 
-    document.getElementById('agStatus').textContent = status.toUpperCase();
+    document.getElementById('agStatus').textContent = statusLabel;
     document.getElementById('agStatus').className = 'card-value ' + (
       status === 'running' ? 'green' : status === 'paused' ? 'yellow' : 'red'
     );
-    document.getElementById('agRunId').textContent = 'Run: ' + (data.run_id || '').slice(0, 8);
+    document.getElementById('agRunId').textContent = __('dashboard.run') + ': ' + (data.run_id || '').slice(0, 8);
     document.getElementById('agCycles').textContent = data.cycle_count || 0;
     document.getElementById('agLastCycle').textContent = data.last_cycle_at
-      ? timeAgo(data.last_cycle_at) : 'No cycles yet';
+      ? timeAgo(data.last_cycle_at) : __('dashboard.no_cycles');
 
     // Update action button states based on agent status
     updateAgentButtons(status);
@@ -476,14 +477,14 @@ async function loadAgentStatus() {
     const tasks = (data.total_tasks_succeeded || 0) + (data.total_tasks_failed || 0);
     document.getElementById('agTasks').textContent = tasks;
     document.getElementById('agTaskDetail').textContent =
-      (data.total_tasks_succeeded || 0) + ' succeeded, ' + (data.total_tasks_failed || 0) + ' failed';
+      (data.total_tasks_succeeded || 0) + ' ' + __('dashboard.succeeded') + ', ' + (data.total_tasks_failed || 0) + ' ' + __('dashboard.failed');
 
     // Workers
     const workers = data.workers || [];
     document.getElementById('ovWorkers').textContent = workers.length;
     const active = workers.filter(w => w.status === 'busy').length;
     const idle = workers.filter(w => w.status === 'idle').length;
-    document.getElementById('ovWorkerDetail').textContent = active + ' busy, ' + idle + ' idle';
+    document.getElementById('ovWorkerDetail').textContent = active + ' ' + __('dashboard.busy') + ', ' + idle + ' ' + __('dashboard.idle');
 
     if (workers.length) {
       document.getElementById('workerList').innerHTML = workers.map(w => `
@@ -491,16 +492,16 @@ async function loadAgentStatus() {
           <div>
             <span class="worker-dot dot-${w.status}"></span>
             <strong>${w.worker_id}</strong>
-            <span style="color:var(--text2);margin-left:8px">${w.status}</span>
+            <span style="color:var(--text2);margin-left:8px">${__('agent.status.' + w.status) || w.status}</span>
           </div>
           <div>
-            <span style="color:var(--text2)">${w.tasks_completed} done, ${w.tasks_failed} failed</span>
+            <span style="color:var(--text2)">${w.tasks_completed} ${__('dashboard.done')}, ${w.tasks_failed} ${__('dashboard.failed')}</span>
             <span style="color:var(--text2);margin-left:12px">${fmtTime(w.uptime_seconds)}</span>
           </div>
         </div>
       `).join('');
     } else {
-      document.getElementById('workerList').innerHTML = '<div class="empty-state"><p>No workers running.</p></div>';
+      document.getElementById('workerList').innerHTML = '<div class="empty-state"><p>' + __('dashboard.no_workers') + '</p></div>';
     }
   } catch (e) { console.error('loadAgentStatus', e); }
 }
@@ -514,21 +515,21 @@ async function loadAgentDashboard() {
     const q = data.queue || {};
     document.getElementById('ovQueueDepth').textContent = q.depth || 0;
     document.getElementById('ovQueueDetail').textContent =
-      (q.total_completed || 0) + ' completed, ' + (q.total_failed || 0) + ' failed';
+      (q.total_completed || 0) + ' ' + __('dashboard.completed') + ', ' + (q.total_failed || 0) + ' ' + __('dashboard.failed');
 
     const d = data.decisions || {};
     document.getElementById('ovDecisions').textContent = d.total || 0;
     document.getElementById('ovDecisionDetail').textContent =
-      (d.recent_buy || 0) + ' BUY, ' + (d.recent_watch || 0) + ' WATCH';
+      (d.recent_buy || 0) + ' ' + __('dashboard.buy') + ', ' + (d.recent_watch || 0) + ' ' + __('dashboard.watch');
 
     // Queue stats
     document.getElementById('queueStats').innerHTML = `
       <div class="metric-row">
-        <div class="metric"><div class="metric-label">Depth</div><div class="metric-value">${q.depth || 0}</div></div>
-        <div class="metric"><div class="metric-label">Running</div><div class="metric-value">${q.running || 0}</div></div>
-        <div class="metric"><div class="metric-label">Enqueued</div><div class="metric-value">${q.total_enqueued || 0}</div></div>
-        <div class="metric"><div class="metric-label">Completed</div><div class="metric-value">${q.total_completed || 0}</div></div>
-        <div class="metric"><div class="metric-label">Failed</div><div class="metric-value">${q.total_failed || 0}</div></div>
+        <div class="metric"><div class="metric-label">${__('dashboard.depth')}</div><div class="metric-value">${q.depth || 0}</div></div>
+        <div class="metric"><div class="metric-label">${__('dashboard.running')}</div><div class="metric-value">${q.running || 0}</div></div>
+        <div class="metric"><div class="metric-label">${__('dashboard.enqueued')}</div><div class="metric-value">${q.total_enqueued || 0}</div></div>
+        <div class="metric"><div class="metric-label">${__('dashboard.completed')}</div><div class="metric-value">${q.total_completed || 0}</div></div>
+        <div class="metric"><div class="metric-label">${__('dashboard.failed')}</div><div class="metric-value">${q.total_failed || 0}</div></div>
       </div>
     `;
   } catch (e) { console.error('loadAgentDashboard', e); }
@@ -542,14 +543,14 @@ async function loadRecentDecisions() {
     const data = await api('GET', '/agent/decisions?limit=10');
     const decisions = data.decisions || [];
     if (!decisions.length) {
-      document.getElementById('recentDecisions').innerHTML = '<div class="empty-state"><p>No decisions yet. Start the agent to see results.</p></div>';
+      document.getElementById('recentDecisions').innerHTML = '<div class="empty-state"><p>' + __('dashboard.no_decisions') + '</p></div>';
       return;
     }
     document.getElementById('recentDecisions').innerHTML = decisions.map(d => `
       <div class="log-entry">
         <span class="badge badge-${(d.action || 'skip').toLowerCase()}">${d.action || 'SKIP'}</span>
-        <span class="log-action">${d.product_title || d.asin || 'Unknown'}</span>
-        <span class="log-score">Score: ${d.opportunity_score != null ? d.opportunity_score.toFixed(0) : '—'}/100 | ROI: ${d.roi_percentage != null ? d.roi_percentage.toFixed(1) : '—'}%</span>
+        <span class="log-action">${d.product_title || d.asin || __('dashboard.unknown')}</span>
+        <span class="log-score">${__('dashboard.score_label')}: ${d.opportunity_score != null ? d.opportunity_score.toFixed(0) : '—'}/100 | ${__('dashboard.roi')}: ${d.roi_percentage != null ? d.roi_percentage.toFixed(1) : '—'}%</span>
       </div>
     `).join('');
   } catch (e) { console.error('loadRecentDecisions', e); }

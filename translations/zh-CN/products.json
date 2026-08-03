@@ -1,72 +1,73 @@
 {
-  "title": "商品管理",
-  "subtitle": "管理和优化您的商品目录",
-  "total": "共{count}件商品",
-  "search_placeholder": "按名称、SKU或ASIN搜索...",
-  "fields": {
-    "sku": "SKU",
-    "asin": "ASIN",
-    "name": "商品名称",
-    "brand": "品牌",
-    "category": "品类",
-    "price": "价格",
-    "cost": "成本",
-    "profit": "利润",
-    "margin": "利润率",
-    "stock": "库存",
-    "supplier": "供应商",
-    "marketplace": "平台",
-    "status": "状态",
-    "created_at": "创建时间",
-    "updated_at": "更新时间",
-    "weight": "重量",
-    "dimensions": "尺寸",
-    "barcode": "条码",
-    "description": "描述"
-  },
-  "status": {
-    "active": "启用中",
-    "inactive": "已停用",
-    "draft": "草稿",
-    "published": "已发布",
-    "out_of_stock": "缺货",
-    "low_stock": "低库存",
-    "discontinued": "已下架"
-  },
   "actions": {
     "add": "添加商品",
-    "edit": "编辑",
+    "bulk_update": "批量更新",
     "delete": "删除",
     "duplicate": "复制",
+    "edit": "编辑",
     "export": "导出",
     "import": "导入",
-    "bulk_update": "批量更新",
-    "view_details": "查看详情",
-    "price_history": "价格历史"
+    "price_history": "价格历史",
+    "view_details": "查看详情"
+  },
+  "asin": "ASIN",
+  "confirm_delete": "确定要删除此商品吗？",
+  "fields": {
+    "asin": "ASIN",
+    "barcode": "条码",
+    "brand": "品牌",
+    "category": "品类",
+    "cost": "成本",
+    "created_at": "创建时间",
+    "description": "描述",
+    "dimensions": "尺寸",
+    "margin": "利润率",
+    "marketplace": "平台",
+    "name": "商品名称",
+    "price": "价格",
+    "profit": "利润",
+    "sku": "SKU",
+    "status": "状态",
+    "stock": "库存",
+    "supplier": "供应商",
+    "updated_at": "更新时间",
+    "weight": "重量"
   },
   "form": {
-    "title_add": "添加商品",
-    "title_edit": "编辑商品",
-    "price": "销售价",
+    "brand": "品牌",
+    "category": "品类",
     "cost": "单位成本",
+    "description": "描述",
+    "image_url": "图片地址",
+    "price": "销售价",
     "stock": "库存数量",
     "supplier": "供应商",
-    "category": "品类",
-    "brand": "品牌",
-    "description": "描述",
-    "image_url": "图片地址"
+    "title_add": "添加商品",
+    "title_edit": "编辑商品"
   },
-  "validation": {
-    "required_name": "商品名称为必填项",
-    "invalid_price": "请输入有效价格",
-    "invalid_stock": "请输入有效库存数量",
-    "required_sku": "SKU为必填项"
+  "search_placeholder": "按名称、SKU或ASIN搜索...",
+  "status": {
+    "active": "启用中",
+    "discontinued": "已下架",
+    "draft": "草稿",
+    "inactive": "已停用",
+    "low_stock": "低库存",
+    "out_of_stock": "缺货",
+    "published": "已发布"
   },
+  "subtitle": "管理和优化您的商品目录",
   "table": {
+    "bulk_actions": "批量操作",
     "no_products": "没有符合筛选条件的商品。",
     "no_results": "未找到商品",
-    "select_all": "全选",
-    "bulk_actions": "批量操作"
+    "select_all": "全选"
   },
-  "confirm_delete": "确定要删除此商品吗？"
+  "title": "商品管理",
+  "total": "共{count}件商品",
+  "validation": {
+    "invalid_price": "请输入有效价格",
+    "invalid_stock": "请输入有效库存数量",
+    "required_name": "商品名称为必填项",
+    "required_sku": "SKU为必填项"
+  }
 }

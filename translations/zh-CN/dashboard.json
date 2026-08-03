@@ -1,59 +1,102 @@
 {
-  "title": "智能选品仪表盘",
-  "subtitle": "实时总览您的商品目录、收入与机会",
-  "welcome": "欢迎回来，{name}！",
-  "last_updated": "最后更新：{time}",
+  "agent_status": "智能体状态",
+  "ai_recommendation": "AI 评分",
+  "alerts": {
+    "empty": "所有事项都已处理！",
+    "new": "新提醒",
+    "title": "提醒"
+  },
+  "all_products": "全部商品",
+  "bsr_history": "BSR 历史",
+  "busy": "忙碌",
+  "buy": "买入",
+  "chart": {
+    "orders_by_marketplace": "各平台订单",
+    "profit_margin": "利润率",
+    "revenue_trend": "收入走势",
+    "sales_by_category": "各品类销量",
+    "top_products": "热销商品"
+  },
+  "completed": "完成",
+  "cycles": "运行周期",
+  "decisions_today": "今日决策",
+  "depth": "深度",
+  "done": "完成",
+  "empty": "暂无数据。添加商品即可开始。",
+  "enqueued": "已入队",
+  "enter_asin": "输入 ASIN",
+  "evaluate_product": "评估商品",
+  "export": "导出报表",
+  "failed": "失败",
+  "idle": "空闲",
   "kpi": {
-    "revenue": "收入",
-    "profit": "利润",
+    "avg_margin": "平均利润率",
+    "customers": "客户",
     "orders": "订单",
     "products": "商品数",
-    "suppliers": "供应商",
-    "customers": "客户",
-    "avg_margin": "平均利润率",
-    "roi": "投资回报率"
+    "profit": "利润",
+    "revenue": "收入",
+    "roi": "投资回报率",
+    "suppliers": "供应商"
   },
-  "trend": {
-    "revenue": "收入趋势",
-    "profit": "利润趋势",
-    "sales": "销量趋势",
-    "orders": "订单趋势",
-    "last_30_days": "最近30天"
-  },
-  "chart": {
-    "revenue_trend": "收入走势",
-    "profit_margin": "利润率",
-    "sales_by_category": "各品类销量",
-    "top_products": "热销商品",
-    "orders_by_marketplace": "各平台订单"
-  },
-  "sections": {
-    "recent_orders": "最近订单",
-    "recent_activity": "最近动态",
-    "top_products": "热销商品",
-    "top_suppliers": "主要供应商",
-    "low_stock": "库存预警",
-    "alerts": "提醒",
-    "opportunities": "隐藏机会",
-    "forecasts": "销量预测"
-  },
-  "alerts": {
-    "title": "提醒",
-    "empty": "所有事项都已处理！",
-    "new": "新提醒"
-  },
-  "low_stock": {
-    "title": "低库存",
-    "none": "暂无低库存商品",
-    "reorder": "补货"
-  },
-  "opportunities": {
-    "title": "隐藏机会",
-    "view": "查看机会",
-    "none": "未检测到机会"
-  },
-  "empty": "暂无数据。添加商品即可开始。",
+  "last_updated": "最后更新：{time}",
   "loading": "正在加载仪表盘...",
+  "low_stock": {
+    "none": "暂无低库存商品",
+    "reorder": "补货",
+    "title": "低库存"
+  },
+  "no_cycles": "暂无运行周期",
+  "no_decisions": "暂无决策，请启动智能体查看结果。",
+  "no_workers": "暂无运行中的工作进程。",
+  "not_started": "尚未启动",
+  "opportunities": {
+    "none": "未检测到机会",
+    "title": "隐藏机会",
+    "view": "查看机会"
+  },
+  "pause_agent": "暂停",
+  "pricing_history": "定价历史",
+  "product_detail": "商品详情",
+  "queue_depth": "队列深度",
+  "queue_empty": "队列为空。",
+  "quick_actions": "快捷操作",
+  "recent_decisions": "最近决策",
   "refresh": "刷新仪表盘",
-  "export": "导出报表"
+  "resume_agent": "继续",
+  "roi": "投资回报率",
+  "run": "运行",
+  "running": "运行中",
+  "score": "评估",
+  "score_label": "评分",
+  "search_placeholder": "搜索 ASIN 或商品…",
+  "sections": {
+    "alerts": "提醒",
+    "forecasts": "销量预测",
+    "low_stock": "库存预警",
+    "opportunities": "隐藏机会",
+    "recent_activity": "最近动态",
+    "recent_orders": "最近订单",
+    "top_products": "热销商品",
+    "top_suppliers": "主要供应商"
+  },
+  "start_agent": "启动智能体",
+  "started": "启动于",
+  "stop_agent": "停止",
+  "stopped": "已停止",
+  "subtitle": "实时总览您的商品目录、收入与机会",
+  "succeeded": "成功",
+  "title": "智能选品仪表盘",
+  "trend": {
+    "last_30_days": "最近30天",
+    "orders": "订单趋势",
+    "profit": "利润趋势",
+    "revenue": "收入趋势",
+    "sales": "销量趋势"
+  },
+  "unknown": "未知",
+  "view_details": "查看详情",
+  "watch": "关注",
+  "welcome": "欢迎回来，{name}！",
+  "workers": "工作进程"
 }
