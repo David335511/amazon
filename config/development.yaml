@@ -261,3 +261,27 @@ finance:
   min_cash_reserve: 500.0       # cash held back before allocating
 
   max_batch_size: 50
+
+supplier_intel:
+  # Supplier intelligence. Tracks the HISTORICAL behaviour of suppliers
+  # (prices, sale frequency, coupon frequency, inventory stability, shipping
+  # speed, return policy, customer service, order-cancellation rate, discount
+  # patterns, stockout frequency) and computes five scores purely from that
+  # history: reliability, volatility, discount, risk, seasonality. Each
+  # profile also returns an AI explanation of supplier behaviour. All
+  # scoring thresholds are configurable.
+  enabled: true
+
+  # Scoring thresholds.
+  max_shipping_days: 14.0      # shipping at/above this scores zero on shipping reliability
+  volatility_scale: 0.5        # coefficient-of-variation considered "high"
+  max_coupon_rate: 5.0         # coupons per period at full credit
+  max_sale_rate: 5.0           # sale events per period at full credit
+  max_stockout_rate: 3.0       # stockouts per period at no credit
+  min_samples: 8               # observations needed for full score confidence
+
+  max_batch_size: 50
+
+  # AI explanation provider: "reasoning" (deterministic narrative, zero
+  # external calls). Future: "openai" / "anthropic" plug in here.
+  explanation_provider: reasoning

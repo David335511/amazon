@@ -218,6 +218,9 @@ class Settings(BaseSettings):
     # Raw YAML block for the financial optimization engine. Validated lazily
     # into `app.finance.config.FinanceConfig` by the DI layer.
     finance: dict[str, Any] = Field(default_factory=dict)
+    # Raw YAML block for supplier intelligence. Validated lazily into
+    # `app.supplier_intel.config.SupplierIntelConfig` by the DI layer.
+    supplier_intel: dict[str, Any] = Field(default_factory=dict)
     # API security (Phase 0). Disabled by default so local dev is unaffected;
     # set `enabled: true` and provide API keys to protect the API.
     security: SecurityConfig = Field(default_factory=SecurityConfig)
@@ -289,6 +292,7 @@ class Settings(BaseSettings):
             feature_store=dict(yaml_data.get("feature_store", {})),
             forecasting=dict(yaml_data.get("forecasting", {})),
             finance=dict(yaml_data.get("finance", {})),
+            supplier_intel=dict(yaml_data.get("supplier_intel", {})),
             event_bus=event_bus_cfg,
             security=security_cfg,
         )

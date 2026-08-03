@@ -36,6 +36,9 @@ from app.forecasting.models import (  # noqa: F401  (register forecasting tables
 )
 from app.main import create_app
 from app.memory.models import Memory  # noqa: F401  (register memories table)
+from app.supplier_intel.models import (
+    SupplierObservation,  # noqa: F401  (register supplier-intel table)
+)
 
 
 @pytest.fixture(scope="session")

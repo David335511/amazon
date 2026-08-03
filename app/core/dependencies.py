@@ -51,6 +51,11 @@ from app.memory import (
     MemoryRepository,
     build_embedding_provider,
 )
+from app.supplier_intel import (
+    SupplierIntelConfig,
+    SupplierIntelManager,
+    SupplierIntelRepository,
+)
 from app.vision import VisionConfig, VisionManager, build_vision_provider
 
 logger = get_logger(__name__)
@@ -292,6 +297,26 @@ def get_finance_manager(
         _finance_config = FinanceConfig.model_validate(settings.finance)
     repo = FinanceRepository(db)
     return FinanceManager(repo, config=_finance_config)
+
+
+# Supplier intelligence. The config is shared and stateless; a new manager is
+# built per request with the DB session.
+_supplier_intel_config: Any | None = None
+
+
+def get_supplier_intel_manager(
+    db: AsyncSession = Depends(get_db),
+) -> SupplierIntelManager:
+    """Build a `SupplierIntelManager` bound to the request's DB session.
+
+    This is the ONLY entry point the rest of the platform uses to record
+    historical supplier observations and compute supplier scores / explanations.
+    """
+    global _supplier_intel_config
+    if _supplier_intel_config is None:
+        _supplier_intel_config = SupplierIntelConfig.model_validate(settings.supplier_intel)
+    repo = SupplierIntelRepository(db)
+    return SupplierIntelManager(repo, config=_supplier_intel_config)
 
 
 class Container:
