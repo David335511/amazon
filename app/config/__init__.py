@@ -234,6 +234,9 @@ class Settings(BaseSettings):
     # Raw YAML block for the multi-agent orchestration framework. Validated
     # lazily into `app.multiagent.config.MultiAgentConfig` by the DI layer.
     multiagent: dict[str, Any] = Field(default_factory=dict)
+    # Raw YAML block for the experimentation platform. Validated lazily into
+    # `app.experiments.config.ExperimentConfig` by the DI layer.
+    experiments: dict[str, Any] = Field(default_factory=dict)
     # API security (Phase 0). Disabled by default so local dev is unaffected;
     # set `enabled: true` and provide API keys to protect the API.
     security: SecurityConfig = Field(default_factory=SecurityConfig)
@@ -308,6 +311,7 @@ class Settings(BaseSettings):
             supplier_intel=dict(yaml_data.get("supplier_intel", {})),
             reverse_sourcing=dict(yaml_data.get("reverse_sourcing", {})),
             multiagent=dict(yaml_data.get("multiagent", {})),
+            experiments=dict(yaml_data.get("experiments", {})),
             event_bus=event_bus_cfg,
             security=security_cfg,
         )

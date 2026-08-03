@@ -315,5 +315,19 @@ multiagent:
   # one-file change in app/multiagent/roles/ — no engine code changes.
   enabled: true
   max_parallel_agents: 10
+experiments:
+  # Experimentation platform. Runs reproducible experiments (A/B, feature flags,
+  # prompts, rules, scoring / LLM / supplier / prediction comparisons), tracks
+  # winner / confidence / profit & ROI impact / precision / recall / FP / FN, and
+  # generates experiment reports. Assignment is deterministic (seed + subject),
+  # every experiment snapshots its config + code version, and every report stores
+  # its params snapshot so results are always reproducible.
+  enabled: true
+  default_alpha: 0.05
+  default_min_sample_size: 100
+  default_seed: 42
+  max_variants_per_experiment: 20
+  max_batch_size: 1000
+  code_version: ""
   max_delegations_per_agent: 10
   store_shared_memory: true

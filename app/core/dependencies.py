@@ -29,6 +29,11 @@ from app.documents import (
 from app.domain.services.order_service import OrderService
 from app.domain.services.product_service import ProductService
 from app.events import EventBus, EventBusConfig, InMemoryEventBus
+from app.experiments import (
+    ExperimentConfig,
+    ExperimentManager,
+    ExperimentRepository,
+)
 from app.features import FeatureConfig, FeatureManager, FeatureRepository, build_signal_provider
 from app.finance import (
     FinanceConfig,
@@ -412,6 +417,27 @@ def get_multiagent_manager(
         memory_sharing=MemorySharing(),
         config=_multiagent_config,
     )
+
+
+# Experimentation platform. The config is shared and stateless; a new manager is
+# built per request with the DB session.
+_experiment_config: Any | None = None
+
+
+def get_experiment_manager(
+    db: AsyncSession = Depends(get_db),
+) -> ExperimentManager:
+    """Build an `ExperimentManager` bound to the request's DB session.
+
+    This is the ONLY entry point the rest of the platform uses to run
+    reproducible experiments (A/B, feature flags, prompts, rules, scoring / LLM /
+    supplier / prediction comparisons) and generate experiment reports.
+    """
+    global _experiment_config
+    if _experiment_config is None:
+        _experiment_config = ExperimentConfig.model_validate(settings.experiments)
+    repo = ExperimentRepository(db)
+    return ExperimentManager(repo, config=_experiment_config)
 
 
 class Container:
