@@ -45,6 +45,11 @@ from app.knowledge_graph.models import (  # noqa: F401  (register knowledge-grap
     GraphEdge,
     GraphNode,
 )
+from app.learning.models import (  # noqa: F401  (register learning tables)
+    LearningPrediction,
+    LearningRecommendation,
+    LearningRun,
+)
 from app.main import create_app
 from app.memory.models import Memory  # noqa: F401  (register memories table)
 from app.multiagent.models import (  # noqa: F401  (register multi-agent tables)

@@ -240,6 +240,9 @@ class Settings(BaseSettings):
     # Raw YAML block for the commerce knowledge graph. Validated lazily into
     # `app.knowledge_graph.config.KnowledgeGraphConfig` by the DI layer.
     knowledge_graph: dict[str, Any] = Field(default_factory=dict)
+    # Raw YAML block for the continuous-learning platform. Validated lazily into
+    # `app.learning.config.LearningConfig` by the DI layer.
+    learning: dict[str, Any] = Field(default_factory=dict)
     # API security (Phase 0). Disabled by default so local dev is unaffected;
     # set `enabled: true` and provide API keys to protect the API.
     security: SecurityConfig = Field(default_factory=SecurityConfig)
@@ -316,6 +319,7 @@ class Settings(BaseSettings):
             multiagent=dict(yaml_data.get("multiagent", {})),
             experiments=dict(yaml_data.get("experiments", {})),
             knowledge_graph=dict(yaml_data.get("knowledge_graph", {})),
+            learning=dict(yaml_data.get("learning", {})),
             event_bus=event_bus_cfg,
             security=security_cfg,
         )

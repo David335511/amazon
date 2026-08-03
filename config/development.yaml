@@ -347,3 +347,20 @@ knowledge_graph:
   max_clusters: 10
   max_opportunities: 20
   max_batch_size: 500
+
+learning:
+  # Continuous-learning platform. Automatically improves using historical
+  # outcomes: compares predicted vs actual profit / sales / ROI / risk, detects
+  # bad rules / weak prompts / poor AI decisions / incorrect matches / ranking
+  # mistakes, and generates recommendations for improving prompts, feature
+  # weights, matching algorithms, forecast models and rule thresholds.
+  enabled: true
+  min_samples_for_issues: 5
+  issue_severity_threshold: 0.4
+  rolling_window: 20
+  default_rule_threshold: 0.5
+  rule_tune_min_delta: 0.01
+  rule_tune_min_improvement: 0.02
+  feature_reweight_min_abs_corr: 0.2
+  max_predictions_per_scan: 5000
+  max_recommendations_per_run: 50

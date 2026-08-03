@@ -53,6 +53,7 @@ from app.knowledge_graph import (
     KnowledgeGraphManager,
     PostgresGraphStore,
 )
+from app.learning import LearningConfig, LearningManager, LearningRepository
 from app.marketplaces.manager import MarketplaceManager
 from app.memory import (
     InMemoryVectorStore,
@@ -465,6 +466,27 @@ def get_knowledge_graph_manager(
         _knowledge_graph_config = KnowledgeGraphConfig.model_validate(settings.knowledge_graph)
     store = PostgresGraphStore(db)
     return KnowledgeGraphManager(store, config=_knowledge_graph_config)
+
+
+# Continuous-learning platform. The config is shared and stateless; a new
+# manager is built per request with the DB session.
+_learning_config: Any | None = None
+
+
+def get_learning_manager(
+    db: AsyncSession = Depends(get_db),
+) -> LearningManager:
+    """Build a `LearningManager` bound to the request's DB session.
+
+    This is the ONLY entry point the rest of the platform uses to record
+    predictions, feed back outcomes, measure accuracy over time, detect issues,
+    auto-tune rules/features, and run versioned continuous-learning cycles.
+    """
+    global _learning_config
+    if _learning_config is None:
+        _learning_config = LearningConfig.model_validate(settings.learning)
+    repo = LearningRepository(db)
+    return LearningManager(repo, config=_learning_config)
 
 
 class Container:
