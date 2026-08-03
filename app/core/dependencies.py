@@ -32,6 +32,7 @@ from app.memory import (
     MemoryRepository,
     build_embedding_provider,
 )
+from app.vision import VisionConfig, VisionManager, build_vision_provider
 
 logger = get_logger(__name__)
 
@@ -109,6 +110,25 @@ def get_event_bus() -> EventBus:
             jitter=cfg.jitter,
         )
     return _event_bus
+
+
+# Vision subsystem singleton. The provider and config are stateless and shared.
+# The manager exposes the ONLY way the platform analyzes images and matches
+# products (vision + catalog fusion).
+_vision_manager: VisionManager | None = None
+
+
+def get_vision_manager() -> VisionManager:
+    """Return the shared `VisionManager` built from app config.
+
+    The provider is inert until an image is actually analyzed, so this is cheap
+    even when a provider other than the pure-stdlib local default is configured.
+    """
+    global _vision_manager
+    if _vision_manager is None:
+        cfg = VisionConfig.model_validate(settings.vision)
+        _vision_manager = VisionManager(provider=build_vision_provider(cfg), config=cfg)
+    return _vision_manager
 
 
 # Memory system singletons. The embedding provider and vector store are shared

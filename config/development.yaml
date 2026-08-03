@@ -135,3 +135,32 @@ security:
   header_name: X-API-Key
   public_paths:
     - /api/v1/health
+
+vision:
+  # Computer-vision subsystem. Pure-stdlib `local` provider is the default and
+  # always available (embeddings, color/shape/size/package, model-number scan,
+  # heuristic barcode/logo). `tesseract` adds real OCR; `http` delegates to any
+  # generic remote vision service (base_url/api_key below).
+  enabled: true
+  provider: local
+  max_decode_bytes: 10000000
+  embed_grid: 16
+  shape_grid: 8
+  color_buckets: 4
+  dominant_color_count: 5
+  barcode_transition_threshold: 28
+  match_threshold: 0.55
+  weight_upc: 0.30
+  weight_brand: 0.15
+  weight_title: 0.15
+  weight_attributes: 0.10
+  weight_embedding: 0.10
+  weight_color: 0.05
+  weight_shape: 0.05
+  weight_size: 0.03
+  weight_barcode: 0.03
+  weight_logo: 0.02
+  weight_model: 0.02
+  hard_mismatch_penalty: 0.35
+  http_base_url: ""
+  http_api_key: ""

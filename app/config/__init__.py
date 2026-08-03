@@ -203,6 +203,9 @@ class Settings(BaseSettings):
     # Raw YAML block for the AI memory system. Validated lazily into
     # `app.memory.config.MemoryConfig` by the DI layer.
     memory: dict[str, Any] = Field(default_factory=dict)
+    # Raw YAML block for the computer-vision subsystem. Validated lazily into
+    # `app.vision.config.VisionConfig` by the DI layer.
+    vision: dict[str, Any] = Field(default_factory=dict)
     # API security (Phase 0). Disabled by default so local dev is unaffected;
     # set `enabled: true` and provide API keys to protect the API.
     security: SecurityConfig = Field(default_factory=SecurityConfig)
@@ -269,6 +272,7 @@ class Settings(BaseSettings):
             features=features_cfg,
             browser=dict(yaml_data.get("browser", {})),
             memory=dict(yaml_data.get("memory", {})),
+            vision=dict(yaml_data.get("vision", {})),
             event_bus=event_bus_cfg,
             security=security_cfg,
         )

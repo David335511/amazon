@@ -13,6 +13,7 @@ from app.api.v1.orders import router as orders_router
 from app.api.v1.products import router as products_router
 from app.api.v1.products_sourcing import router as products_sourcing_router
 from app.api.v1.sourcing import router as sourcing_router
+from app.api.v1.vision import router as vision_router
 from app.core.security import require_api_key
 
 # The entire v1 API surface requires API-key auth by default. Health probes are
@@ -31,3 +32,4 @@ router.include_router(products_router)
 router.include_router(orders_router)
 router.include_router(products_sourcing_router)
 router.include_router(sourcing_router)
+router.include_router(vision_router)
