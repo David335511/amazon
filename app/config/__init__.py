@@ -221,6 +221,9 @@ class Settings(BaseSettings):
     # Raw YAML block for supplier intelligence. Validated lazily into
     # `app.supplier_intel.config.SupplierIntelConfig` by the DI layer.
     supplier_intel: dict[str, Any] = Field(default_factory=dict)
+    # Raw YAML block for the reverse sourcing engine. Validated lazily into
+    # `app.reverse_sourcing.config.ReverseSourcingConfig` by the DI layer.
+    reverse_sourcing: dict[str, Any] = Field(default_factory=dict)
     # API security (Phase 0). Disabled by default so local dev is unaffected;
     # set `enabled: true` and provide API keys to protect the API.
     security: SecurityConfig = Field(default_factory=SecurityConfig)
@@ -293,6 +296,7 @@ class Settings(BaseSettings):
             forecasting=dict(yaml_data.get("forecasting", {})),
             finance=dict(yaml_data.get("finance", {})),
             supplier_intel=dict(yaml_data.get("supplier_intel", {})),
+            reverse_sourcing=dict(yaml_data.get("reverse_sourcing", {})),
             event_bus=event_bus_cfg,
             security=security_cfg,
         )

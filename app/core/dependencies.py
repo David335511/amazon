@@ -51,6 +51,15 @@ from app.memory import (
     MemoryRepository,
     build_embedding_provider,
 )
+from app.plugins.manager import PluginManager
+from app.reverse_sourcing import (
+    PassthroughAsinResolver,
+    PluginManagerProvider,
+    ReverseSourcingConfig,
+    ReverseSourcingManager,
+    ReverseSourcingRepository,
+    TrendDiscountPredictor,
+)
 from app.supplier_intel import (
     SupplierIntelConfig,
     SupplierIntelManager,
@@ -317,6 +326,47 @@ def get_supplier_intel_manager(
         _supplier_intel_config = SupplierIntelConfig.model_validate(settings.supplier_intel)
     repo = SupplierIntelRepository(db)
     return SupplierIntelManager(repo, config=_supplier_intel_config)
+
+
+# Reverse sourcing. Config + provider + resolver + predictor are shared and
+# stateless; the intel manager and repo are built per request with the session.
+_reverse_config: Any | None = None
+_reverse_provider: Any | None = None
+_reverse_resolver: Any | None = None
+_reverse_predictor: Any | None = None
+_reverse_intel_config: Any | None = None
+
+
+def get_reverse_sourcing_manager(
+    db: AsyncSession = Depends(get_db),
+) -> ReverseSourcingManager:
+    """Build a `ReverseSourcingManager` bound to the request's DB session.
+
+    This is the ONLY entry point the rest of the platform uses to reverse-source
+    an ASIN across every known supplier and generate sourcing recommendations.
+    """
+    global _reverse_config, _reverse_provider, _reverse_resolver, _reverse_predictor
+    global _reverse_intel_config
+    if _reverse_config is None:
+        _reverse_config = ReverseSourcingConfig.model_validate(settings.reverse_sourcing)
+    if _reverse_provider is None:
+        _reverse_provider = PluginManagerProvider(PluginManager())
+    if _reverse_resolver is None:
+        _reverse_resolver = PassthroughAsinResolver()
+    if _reverse_predictor is None:
+        _reverse_predictor = TrendDiscountPredictor()
+    if _reverse_intel_config is None:
+        _reverse_intel_config = SupplierIntelConfig.model_validate(settings.supplier_intel)
+    intel = SupplierIntelManager(SupplierIntelRepository(db), config=_reverse_intel_config)
+    repo = ReverseSourcingRepository(db)
+    return ReverseSourcingManager(
+        repo,
+        config=_reverse_config,
+        provider=_reverse_provider,
+        resolver=_reverse_resolver,
+        predictor=_reverse_predictor,
+        intel_manager=intel,
+    )
 
 
 class Container:

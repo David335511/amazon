@@ -285,3 +285,20 @@ supplier_intel:
   # AI explanation provider: "reasoning" (deterministic narrative, zero
   # external calls). Future: "openai" / "anthropic" plug in here.
   explanation_provider: reasoning
+
+reverse_sourcing:
+  # Reverse sourcing engine. Turns an Amazon ASIN into a full supplier
+  # analysis: every known supplier with price, shipping, landed cost,
+  # availability and discount; historical supplier prices & discounts
+  # (derived from past runs); a predicted future discount per supplier; a
+  # supplier ranking with best / cheapest / fastest / highest-confidence
+  # picks; and sourcing recommendations. Provider-driven: adding a supplier
+  # plugin (app/plugins/suppliers/) requires no engine change.
+  enabled: true
+  default_currency: USD
+  default_quantity: 1
+  max_suppliers: 50
+  max_batch_size: 50
+  forecast_horizon: 1
+  # Ranking weights: price, speed, availability, discount, reliability, risk_inverse
+  rank_weights: [0.30, 0.20, 0.15, 0.10, 0.15, 0.10]
