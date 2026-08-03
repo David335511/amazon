@@ -23,6 +23,7 @@ import app.domain.models.order  # noqa: F401
 import app.domain.models.brand  # noqa: F401
 import app.domain.models.category  # noqa: F401
 import app.domain.models.sourcing  # noqa: F401
+import app.memory.models  # noqa: F401
 
 # Alembic Config object
 config = context.config

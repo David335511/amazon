@@ -16,7 +16,7 @@ import httpx
 
 from app.core.logging import get_logger
 from app.plugins.base import BaseSupplierPlugin
-from app.plugins.config import SupplierConfig, SupplierPluginConfig
+from app.plugins.config import SupplierPluginConfig
 from app.plugins.errors import PluginError, PluginNotFoundError
 from app.plugins.models import (
     SupplierAvailability,
@@ -48,9 +48,11 @@ class PluginManager:
         self,
         registry: PluginRegistry | None = None,
         config: SupplierPluginConfig | None = None,
+        crawler: Any | None = None,
     ) -> None:
         self._registry = registry or PluginRegistry()
         self._config = config or SupplierPluginConfig()
+        self._crawler = crawler
         self._http_client: httpx.AsyncClient | None = None
         self._initialized = False
 
@@ -72,7 +74,12 @@ class PluginManager:
             try:
                 supplier_config = self._config.suppliers.get(code)
                 config_dict = supplier_config.model_dump() if supplier_config else {}
-                self._registry.get(code, config=config_dict, http_client=self._http_client)
+                self._registry.get(
+                    code,
+                    config=config_dict,
+                    http_client=self._http_client,
+                    crawler=self._crawler,
+                )
                 logger.info("Initialized plugin: %s", code)
             except Exception as exc:
                 logger.error("Failed to initialize plugin %s: %s", code, exc)
@@ -110,7 +117,11 @@ class PluginManager:
             PluginNotFoundError: If the plugin is not found.
         """
         try:
-            return self._registry.get(supplier_code, http_client=self._http_client)
+            return self._registry.get(
+                supplier_code,
+                http_client=self._http_client,
+                crawler=self._crawler,
+            )
         except PluginNotFoundError:
             raise
         except Exception as exc:

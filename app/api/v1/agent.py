@@ -37,6 +37,8 @@ from app.analytics.repository import AnalyticsRepository
 from app.core.database import get_db
 from app.core.logging import get_logger
 from app.core.redis import get_redis
+from app.core.dependencies import get_memory_manager
+from app.memory import MemoryManager
 from app.plugins.manager import PluginManager
 from app.plugins.registry import PluginRegistry
 from app.plugins.config import SupplierPluginConfig
@@ -58,6 +60,7 @@ _agent_config: AgentConfig = AgentConfig()
 async def get_agent_deps(
     db: AsyncSession = Depends(get_db),
     redis_client: Redis = Depends(get_redis),
+    memory_manager: MemoryManager = Depends(get_memory_manager),
 ) -> dict[str, Any]:
     """Create or return the global agent instance."""
     global _agent_scheduler
@@ -86,6 +89,7 @@ async def get_agent_deps(
         decision_logger=decision_logger,
         notifier=notifier,
         agent_run_id="api-triggered",
+        memory_manager=memory_manager,
     )
 
     scheduler = AgentScheduler(

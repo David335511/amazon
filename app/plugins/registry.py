@@ -20,7 +20,7 @@ import httpx
 
 from app.core.logging import get_logger
 from app.plugins.base import BaseSupplierPlugin
-from app.plugins.config import SupplierConfig, SupplierPluginConfig
+from app.plugins.config import SupplierPluginConfig
 from app.plugins.errors import PluginNotFoundError
 
 logger = get_logger(__name__)
@@ -55,7 +55,7 @@ class PluginRegistry:
 
         package = importlib.import_module("app.plugins.suppliers")
 
-        for importer, modname, is_pkg in pkgutil.iter_modules(
+        for _importer, modname, is_pkg in pkgutil.iter_modules(
             package.__path__,  # type: ignore[arg-type]
             prefix=f"{package.__name__}.",
         ):
@@ -78,7 +78,7 @@ class PluginRegistry:
 
     def _scan_module(self, module: object) -> None:
         """Scan a module for BaseSupplierPlugin subclasses."""
-        for name, obj in inspect.getmembers(module, inspect.isclass):
+        for _name, obj in inspect.getmembers(module, inspect.isclass):
             if (
                 issubclass(obj, BaseSupplierPlugin)
                 and obj is not BaseSupplierPlugin
@@ -113,6 +113,7 @@ class PluginRegistry:
         supplier_code: str,
         config: dict[str, Any] | None = None,
         http_client: httpx.AsyncClient | None = None,
+        crawler: Any | None = None,
     ) -> BaseSupplierPlugin:
         """Get or create a plugin instance by supplier code.
 
@@ -123,6 +124,7 @@ class PluginRegistry:
             supplier_code: Short supplier code.
             config: Supplier-specific configuration.
             http_client: Shared HTTP client.
+            crawler: Optional shared browser-automation Crawler.
 
         Returns:
             An instance of the plugin.
@@ -130,7 +132,7 @@ class PluginRegistry:
         if supplier_code in self._instances:
             return self._instances[supplier_code]
 
-        instance = self.create(supplier_code, config, http_client)
+        instance = self.create(supplier_code, config, http_client, crawler)
         self._instances[supplier_code] = instance
         return instance
 
@@ -139,6 +141,7 @@ class PluginRegistry:
         supplier_code: str,
         config: dict[str, Any] | None = None,
         http_client: httpx.AsyncClient | None = None,
+        crawler: Any | None = None,
     ) -> BaseSupplierPlugin:
         """Create a fresh plugin instance (not cached).
 
@@ -146,12 +149,13 @@ class PluginRegistry:
             supplier_code: Short supplier code.
             config: Supplier-specific configuration.
             http_client: Shared HTTP client.
+            crawler: Optional shared browser-automation Crawler.
 
         Returns:
             A new instance of the plugin.
         """
         plugin_class = self.get_plugin_class(supplier_code)
-        return plugin_class(config=config, http_client=http_client)
+        return plugin_class(config=config, http_client=http_client, crawler=crawler)
 
     def list_plugins(self) -> list[dict[str, str]]:
         """List all discovered plugins with metadata.

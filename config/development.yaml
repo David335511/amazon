@@ -58,3 +58,80 @@ features:
   enable_swagger: true
   enable_metrics: true
   rate_limiting: false
+
+browser:
+  # Master switch. When false (default), no browser is ever launched.
+  enabled: false
+  browser:
+    headless: true
+    visible: false
+    viewport_width: 1280
+    viewport_height: 720
+    navigation_timeout_ms: 30000
+    wait_until: domcontentloaded
+    max_retries: 3
+    request_delay_min_ms: 500
+    request_delay_max_ms: 2000
+    block_resource_types:
+      - image
+      - media
+      - font
+    max_pages: 8
+    page_idle_timeout_seconds: 120
+    captcha_detection_enabled: true
+    storage_dir: browser_data
+    screenshot_dir: browser_data/screenshots
+    archive_dir: browser_data/archives
+    session_dir: browser_data/sessions
+    cookie_file: browser_data/cookies.json
+    fingerprint:
+      enabled: false
+      randomize_user_agent: true
+      randomize_viewport: false
+      randomize_locale: true
+      randomize_timezone: true
+      randomize_device_scale_factor: true
+    proxy:
+      rotation: round_robin
+      max_failures_before_ban: 5
+      proxies: []
+
+event_bus:
+  enabled: true
+  default_max_retries: 3
+  backoff_base_ms: 200
+  backoff_max_ms: 5000
+  jitter: true
+  dlq_capacity: 1000
+  # Distributed transport. "memory" (default) is the in-process broker;
+  # "redis" selects the Redis Streams broker for horizontal scaling.
+  broker_type: memory
+
+memory:
+  enabled: true
+  # Embeddings: "local" (deterministic hashing, always available) or "ollama"
+  # for real semantic embeddings (requires a running Ollama with an embedding
+  # model pulled, e.g. `ollama pull nomic-embed-text`).
+  embedding_provider: local
+  embedding_enabled: true
+  embedding_dim: 128
+  ollama_url: http://localhost:11434
+  ollama_model: nomic-embed-text
+  short_term_ttl_seconds: 86400
+  consolidation_importance_threshold: 0.7
+  decay_factor: 0.05
+  min_importance: 0.1
+  recall_top_k: 10
+  recall_threshold: 0.25
+  recall_recent_limit: 20
+  max_results_per_type: 100
+
+security:
+  # Phase 0 API auth. Leave `enabled: false` for local development; set to true
+  # and provide keys to protect the /api/v1 tree. Keys can come from env
+  # `API_KEYS` (comma-separated) which overrides this block.
+  enabled: false
+  api_keys: []
+  header_name: X-API-Key
+  public_paths:
+    - /api/v1/health

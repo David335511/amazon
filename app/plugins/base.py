@@ -48,15 +48,38 @@ class BaseSupplierPlugin(ABC):
         self,
         config: dict[str, Any] | None = None,
         http_client: httpx.AsyncClient | None = None,
+        crawler: Any | None = None,
     ) -> None:
         """Initialize the plugin.
 
         Args:
             config: Supplier-specific configuration (API keys, endpoints, etc.).
             http_client: Shared HTTP client for connection pooling.
+            crawler: Optional shared browser-automation Crawler. Supplier plugins
+                that need to scrape a website should use this instead of
+                implementing browser automation themselves.
         """
         self._config = config or {}
         self._http_client = http_client
+        self._crawler = crawler
+
+    def get_crawler(self) -> Any:
+        """Get the shared browser-automation crawler for this plugin.
+
+        Use this for browser-based scraping instead of hand-rolling Playwright.
+        The crawler provides rate limiting, retries, CAPTCHA detection, proxy
+        rotation, session/cookie persistence, screenshots and HTML archiving.
+
+        Raises:
+            ValueError: If no crawler was injected (caller must wire it via
+                the plugin manager).
+        """
+        if self._crawler is None:
+            raise ValueError(
+                f"Plugin '{self.supplier_code}' has no crawler injected. "
+                "Wire a crawler through the plugin manager."
+            )
+        return self._crawler
 
     @abstractmethod
     async def search(
@@ -175,5 +198,5 @@ class BaseSupplierPlugin(ABC):
             return self._http_client
         return httpx.AsyncClient(timeout=30.0)
 
-    async def close(self) -> None:
+    async def close(self) -> None:  # noqa: B027 - optional hook for subclasses
         """Clean up resources. Override if the plugin holds resources."""

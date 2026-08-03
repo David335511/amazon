@@ -34,6 +34,14 @@ from app.domain.services.product_service import (
     ProductASINConflictError,
     ProductNotFoundError,
 )
+from app.marketplaces.errors import (
+    MarketplaceAuthenticationError,
+    MarketplaceConfigurationError,
+    MarketplaceError,
+    MarketplaceNotFoundError,
+    MarketplaceRateLimitError,
+    MarketplaceRequestError,
+)
 
 logger = get_logger(__name__)
 
@@ -122,10 +130,17 @@ def create_app() -> FastAPI:
     )
 
     # ── Middleware ──────────────────────────────────────────
+    allow_origins = list(settings.app.cors.get("allowed_origins", ["*"]))
+    # Wildcard origins cannot be combined with credentials (browsers reject the
+    # response and it weakens the CORS policy). Force credentials off when the
+    # origin set is open.
+    allow_credentials = bool(settings.app.cors.get("allow_credentials", False))
+    if "*" in allow_origins:
+        allow_credentials = False
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.app.cors.get("allowed_origins", ["*"]),
-        allow_credentials=settings.app.cors.get("allow_credentials", True),
+        allow_origins=allow_origins,
+        allow_credentials=allow_credentials,
         allow_methods=settings.app.cors.get("allow_methods", ["*"]),
         allow_headers=settings.app.cors.get("allow_headers", ["*"]),
     )
@@ -232,6 +247,66 @@ def _register_exception_handlers(app: FastAPI) -> None:
                 "current_status": exc.current,
                 "target_status": exc.target,
             },
+        )
+
+    @app.exception_handler(MarketplaceNotFoundError)
+    async def marketplace_not_found_handler(
+        _request: Request,
+        exc: MarketplaceNotFoundError,
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"error": "marketplace_not_found", "message": str(exc)},
+        )
+
+    @app.exception_handler(MarketplaceConfigurationError)
+    async def marketplace_config_error_handler(
+        _request: Request,
+        exc: MarketplaceConfigurationError,
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={"error": "marketplace_not_configured", "message": str(exc)},
+        )
+
+    @app.exception_handler(MarketplaceAuthenticationError)
+    async def marketplace_auth_error_handler(
+        _request: Request,
+        exc: MarketplaceAuthenticationError,
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"error": "marketplace_auth_failed", "message": str(exc)},
+        )
+
+    @app.exception_handler(MarketplaceRateLimitError)
+    async def marketplace_rate_limit_handler(
+        _request: Request,
+        exc: MarketplaceRateLimitError,
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            content={"error": "marketplace_rate_limited", "message": str(exc)},
+        )
+
+    @app.exception_handler(MarketplaceRequestError)
+    async def marketplace_request_error_handler(
+        _request: Request,
+        exc: MarketplaceRequestError,
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            content={"error": "marketplace_upstream_error", "message": str(exc)},
+        )
+
+    @app.exception_handler(MarketplaceError)
+    async def marketplace_generic_handler(
+        _request: Request,
+        exc: MarketplaceError,
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"error": "marketplace_error", "message": str(exc)},
         )
 
     @app.exception_handler(Exception)

@@ -304,6 +304,100 @@ class TestSourcingPipeline:
 
 
 # ═══════════════════════════════════════════════════════════════
+# Pipeline → Memory wiring
+# ═══════════════════════════════════════════════════════════════
+
+
+def _pipeline_with_memory(memory: Any) -> SourcingPipeline:
+    """Build a real pipeline with mocked deps and a mock memory manager."""
+    return SourcingPipeline(
+        plugin_manager=AsyncMock(),
+        sourcing_engine=AsyncMock(),
+        analytics_repo=AsyncMock(),
+        decision_logger=AsyncMock(),
+        notifier=Notifier(),
+        agent_run_id="test-run",
+        memory_manager=memory,
+    )
+
+
+class TestDecisionMemory:
+    """Test that pipeline decisions are recorded into AI memory."""
+
+    @pytest.mark.asyncio
+    async def test_buy_records_success_purchase_and_favorites(self) -> None:
+        memory = AsyncMock()
+        pipeline = _pipeline_with_memory(memory)
+        decision = DecisionLog(
+            id=str(uuid.uuid4()),
+            agent_run_id="test-run",
+            supplier_code="walmart",
+            supplier_sku="SKU001",
+            product_title="Widget",
+            supplier_price=10.99,
+            action=DecisionAction.BUY,
+            opportunity_score=80.0,
+            net_profit=5.0,
+        )
+        await pipeline._record_decision_memory(decision)
+        memory.record_successful_purchase.assert_awaited_once()
+        memory.add_favorite_supplier.assert_awaited_once()
+        memory.note_high_performing_category.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_avoid_records_false_positive(self) -> None:
+        memory = AsyncMock()
+        pipeline = _pipeline_with_memory(memory)
+        decision = DecisionLog(
+            id=str(uuid.uuid4()),
+            agent_run_id="test-run",
+            supplier_code="walmart",
+            supplier_sku="SKU001",
+            product_title="Widget",
+            supplier_price=10.99,
+            action=DecisionAction.AVOID,
+            explanation="Not viable",
+        )
+        await pipeline._record_decision_memory(decision)
+        memory.record_false_positive.assert_awaited_once()
+        memory.record_successful_purchase.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_no_memory_manager_is_noop(self) -> None:
+        pipeline = _pipeline_with_memory(None)
+        decision = DecisionLog(
+            id=str(uuid.uuid4()),
+            agent_run_id="test-run",
+            supplier_code="walmart",
+            supplier_sku="SKU001",
+            product_title="Widget",
+            supplier_price=10.99,
+            action=DecisionAction.BUY,
+        )
+        await pipeline._record_decision_memory(decision)  # must not raise
+
+    @pytest.mark.asyncio
+    async def test_memory_failure_is_isolated(self) -> None:
+        class _Boom:
+            async def record_successful_purchase(self, **kwargs: Any) -> None:
+                raise RuntimeError("db down")
+
+        pipeline = _pipeline_with_memory(_Boom())
+        decision = DecisionLog(
+            id=str(uuid.uuid4()),
+            agent_run_id="test-run",
+            supplier_code="walmart",
+            supplier_sku="SKU001",
+            product_title="Widget",
+            supplier_price=10.99,
+            action=DecisionAction.BUY,
+            opportunity_score=80.0,
+        )
+        await pipeline._record_decision_memory(decision)  # must not raise
+        assert decision.action == DecisionAction.BUY
+
+
+# ═══════════════════════════════════════════════════════════════
 # Worker Tests
 # ═══════════════════════════════════════════════════════════════
 

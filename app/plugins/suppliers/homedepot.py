@@ -6,7 +6,6 @@ Integrates with the Home Depot Pro API (HD Supply / Orange Container).
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
 
 from app.plugins.base import BaseSupplierPlugin
 from app.plugins.models import (

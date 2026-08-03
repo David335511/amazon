@@ -31,6 +31,7 @@ from app.agent.models import (
 from app.agent.notifier import Notifier
 from app.analytics.repository import AnalyticsRepository
 from app.core.logging import get_logger
+from app.memory import MemoryManager
 from app.plugins.manager import PluginManager
 from app.sourcing.engine import SourcingEngine
 from app.sourcing.models import ProductEvaluation
@@ -53,6 +54,7 @@ class SourcingPipeline:
         decision_logger: DecisionLogger,
         notifier: Notifier,
         agent_run_id: str,
+        memory_manager: MemoryManager | None = None,
     ) -> None:
         self._plugin_manager = plugin_manager
         self._sourcing_engine = sourcing_engine
@@ -60,6 +62,7 @@ class SourcingPipeline:
         self._decision_logger = decision_logger
         self._notifier = notifier
         self._agent_run_id = agent_run_id
+        self._memory_manager = memory_manager
 
     # ═══════════════════════════════════════════════════════════════
     # Stage 1: Scan Supplier
@@ -309,6 +312,9 @@ class SourcingPipeline:
             decision.pipeline_duration_ms = (time.monotonic() - start_time) * 1000
             await self._decision_logger.log(decision)
 
+            # Step 6.5: Learn from the decision (memory) — never blocks the pipeline
+            await self._record_decision_memory(decision)
+
             # Step 7: Notify if high-value
             if decision.action == DecisionAction.BUY:
                 await self._notifier.notify_opportunity(decision)
@@ -331,3 +337,43 @@ class SourcingPipeline:
             logger.error("Pipeline failed for %s: %s", product_title, exc)
 
         return decision
+
+    async def _record_decision_memory(self, decision: DecisionLog) -> None:
+        """Persist what the agent learned from a decision into AI memory.
+
+        Memory writes are best-effort: a failure here must never break the
+        sourcing pipeline, so everything is guarded and logged only.
+        """
+        if self._memory_manager is None:
+            return
+        try:
+            external_id = decision.supplier_sku or decision.asin or "unknown"
+            score = f"{decision.opportunity_score:.0f}" if decision.opportunity_score is not None else "n/a"
+            if decision.action == DecisionAction.BUY:
+                await self._memory_manager.record_successful_purchase(
+                    external_id=external_id,
+                    supplier=decision.supplier_code,
+                    price=decision.supplier_price or 0,
+                    profit=decision.net_profit,
+                )
+                await self._memory_manager.add_favorite_supplier(
+                    supplier_code=decision.supplier_code,
+                    supplier_name=decision.supplier_code,
+                    reason=f"Produced a BUY opportunity (score {score}).",
+                )
+                await self._memory_manager.note_high_performing_category(
+                    category=decision.product_title or decision.supplier_code,
+                    avg_profit=decision.net_profit,
+                    reason=f"Agent BUY decision (score {score}).",
+                )
+            elif decision.action == DecisionAction.AVOID:
+                await self._memory_manager.record_false_positive(
+                    external_id=external_id,
+                    reason=decision.explanation or decision.error or "Not a viable opportunity.",
+                )
+            logger.debug(
+                "Recorded memory for decision %s (%s)",
+                decision.id, decision.action.value,
+            )
+        except Exception as exc:
+            logger.warning("Failed to record decision memory: %s", exc)

@@ -6,7 +6,6 @@ Integrates with the Costco Wholesale API (Costco Business Delivery / Costco Next
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
 
 from app.plugins.base import BaseSupplierPlugin
 from app.plugins.models import (

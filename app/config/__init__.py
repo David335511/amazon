@@ -19,6 +19,9 @@ import yaml
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.security import SecurityConfig
+from app.events.config import EventBusConfig
+
 # ──────────────────────────────────────────────────────────────
 # YAML Configuration Loader
 # ──────────────────────────────────────────────────────────────
@@ -193,6 +196,16 @@ class Settings(BaseSettings):
     logging: LoggingConfig
     telemetry: TelemetryConfig
     features: FeaturesConfig
+    # Raw YAML block for the browser automation framework. Validated lazily
+    # into `app.browser.config.BrowserAutomationConfig` by the DI layer.
+    browser: dict[str, Any] = Field(default_factory=dict)
+    event_bus: EventBusConfig
+    # Raw YAML block for the AI memory system. Validated lazily into
+    # `app.memory.config.MemoryConfig` by the DI layer.
+    memory: dict[str, Any] = Field(default_factory=dict)
+    # API security (Phase 0). Disabled by default so local dev is unaffected;
+    # set `enabled: true` and provide API keys to protect the API.
+    security: SecurityConfig = Field(default_factory=SecurityConfig)
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -230,6 +243,21 @@ class Settings(BaseSettings):
         features_cfg = FeaturesConfig(
             **_apply_env_overrides(FeaturesConfig, yaml_data.get("features", {}))
         )
+        event_bus_cfg = EventBusConfig(
+            **_apply_env_overrides(EventBusConfig, yaml_data.get("event_bus", {}))
+        )
+        # Security block: apply YAML defaults, then let explicit env vars win.
+        # The fields have no pydantic aliases, so handle them here directly.
+        security_kwargs = _apply_env_overrides(SecurityConfig, yaml_data.get("security", {}))
+        if os.getenv("SECURITY_ENABLED") is not None:
+            security_kwargs["enabled"] = os.getenv("SECURITY_ENABLED", "").lower() in (
+                "1", "true", "yes",
+            )
+        if os.getenv("API_KEYS") is not None:
+            security_kwargs["api_keys"] = [
+                k.strip() for k in os.getenv("API_KEYS", "").split(",") if k.strip()
+            ]
+        security_cfg = SecurityConfig(**security_kwargs)
 
         instance = cls(
             app=app_cfg,
@@ -239,6 +267,10 @@ class Settings(BaseSettings):
             logging=logging_cfg,
             telemetry=telemetry_cfg,
             features=features_cfg,
+            browser=dict(yaml_data.get("browser", {})),
+            memory=dict(yaml_data.get("memory", {})),
+            event_bus=event_bus_cfg,
+            security=security_cfg,
         )
         cls._instance = instance
         return instance
@@ -295,6 +327,20 @@ class Settings(BaseSettings):
     def _validate_features(cls, v: Any) -> Any:
         if isinstance(v, dict):
             return FeaturesConfig(**v)
+        return v
+
+    @field_validator("event_bus", mode="before")
+    @classmethod
+    def _validate_event_bus(cls, v: Any) -> Any:
+        if isinstance(v, dict):
+            return EventBusConfig(**v)
+        return v
+
+    @field_validator("security", mode="before")
+    @classmethod
+    def _validate_security(cls, v: Any) -> Any:
+        if isinstance(v, dict):
+            return SecurityConfig(**v)
         return v
 
 

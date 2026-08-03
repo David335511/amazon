@@ -15,14 +15,139 @@ from typing import Any
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.browser import BrowserAutomationConfig, BrowserManager, Crawler
+from app.config import settings
 from app.core.database import get_db
 from app.core.logging import get_logger
 from app.domain.services.order_service import OrderService
 from app.domain.services.product_service import ProductService
+from app.events import EventBus, EventBusConfig, InMemoryEventBus
 from app.infrastructure.repositories.order_repository import OrderRepository
 from app.infrastructure.repositories.product_repository import ProductRepository
+from app.marketplaces.manager import MarketplaceManager
+from app.memory import (
+    InMemoryVectorStore,
+    MemoryConfig,
+    MemoryManager,
+    MemoryRepository,
+    build_embedding_provider,
+)
 
 logger = get_logger(__name__)
+
+
+# Marketplace manager is intentionally created once at import and lazily
+# initialized (async) on first use. Providers are stateless across requests
+# aside from the shared HTTP client, so a single shared instance is safe.
+_marketplace_manager = MarketplaceManager()
+_initialized = False
+
+
+# Browser manager / crawler are shared singletons, built lazily on first use.
+# The browser is only launched (Playwright + Chromium) when a supplier actually
+# calls `crawler.fetch()` — so an unconfigured deployment never spawns a browser.
+_browser_manager: BrowserManager | None = None
+
+def get_browser_manager() -> BrowserManager:
+    """Return the shared BrowserManager built from app config.
+
+    The manager is inert until `.launch()` (which only happens inside
+    `Crawler.fetch()`), so this is cheap even when browser automation is off.
+    """
+    global _browser_manager
+    if _browser_manager is None:
+        bcfg = BrowserAutomationConfig.model_validate(settings.browser)
+        _browser_manager = BrowserManager(bcfg.browser)
+    return _browser_manager
+
+
+def get_crawler() -> Crawler:
+    """Return a shared Crawler backed by the shared BrowserManager.
+
+    Supplier plugins use this instead of implementing browser automation
+    themselves. The crawler provides rate limiting, retries, CAPTCHA detection,
+    proxy rotation, sessions, cookies, screenshots, and HTML archiving.
+    """
+    return Crawler(get_browser_manager())
+
+
+
+async def get_marketplace_manager() -> MarketplaceManager:
+    """Return the shared, initialized MarketplaceManager.
+
+    This is the ONLY entry point the rest of the platform uses to talk to
+    marketplaces. Callers receive the `MarketplaceManager` (which yields only
+    `MarketplaceProvider` interface objects), never a concrete provider.
+    """
+    global _initialized
+    if not _initialized:
+        await _marketplace_manager.initialize()
+        _initialized = True
+    return _marketplace_manager
+
+
+# Event bus is a shared in-process singleton. It is inert until someone calls
+# publish()/subscribe(); background workers and distributed brokers are opt-in
+# and never started automatically.
+_event_bus: EventBus | None = None
+
+
+def get_event_bus() -> EventBus:
+    """Return the shared, in-process event bus.
+
+    This is the ONLY way modules should exchange async signals. Producers call
+    ``bus.publish(...)`` and consumers subscribe with ``bus.subscribe(...)`` —
+    decoupling them so no module needs to know who (if anyone) reacts.
+    """
+    global _event_bus
+    if _event_bus is None:
+        cfg = EventBusConfig.model_validate(settings.event_bus)
+        _event_bus = InMemoryEventBus(
+            default_max_retries=cfg.default_max_retries,
+            backoff_base_ms=cfg.backoff_base_ms,
+            backoff_max_ms=cfg.backoff_max_ms,
+            jitter=cfg.jitter,
+        )
+    return _event_bus
+
+
+# Memory system singletons. The embedding provider and vector store are shared
+# and stateless; a new manager is built per request with the DB session. The
+# manager exposes the ONLY way the rest of the platform stores/recalls memories.
+_memory_config: MemoryConfig | None = None
+_memory_embedding_provider: Any | None = None
+_memory_vector_store: Any | None = None
+
+
+def _get_memory_config() -> MemoryConfig:
+    global _memory_config
+    if _memory_config is None:
+        _memory_config = MemoryConfig.model_validate(settings.memory)
+    return _memory_config
+
+
+def get_memory_manager(
+    db: AsyncSession = Depends(get_db),
+) -> MemoryManager:
+    """Build a MemoryManager bound to the request's DB session.
+
+    This is the ONLY entry point the rest of the platform uses to store and
+    recall AI memories (purchases, favorites, preferences, conversations, ...).
+    """
+    global _memory_embedding_provider, _memory_vector_store
+    cfg = _get_memory_config()
+    if _memory_embedding_provider is None:
+        _memory_embedding_provider = build_embedding_provider(cfg)
+    if _memory_vector_store is None:
+        _memory_vector_store = InMemoryVectorStore()
+    repo = MemoryRepository(db)
+    return MemoryManager(
+        repo,
+        embedding_provider=_memory_embedding_provider,
+        vector_store=_memory_vector_store,
+        config=cfg,
+    )
+
 
 
 class Container:
