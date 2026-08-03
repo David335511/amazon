@@ -59,6 +59,16 @@ vision = [
     "pytesseract>=0.3.10",
 ]
 
+# Optional: full-fidelity PDF parsing and real OCR for the document
+# intelligence system. The subsystem works without this extra (pure-stdlib PDF
+# text-stream, HTML, DOCX, XLSX, CSV). Install with:
+#   pip install '.[documents]'
+documents = [
+    "pypdf>=4.0.0",
+    "Pillow>=10.0.0",
+    "pytesseract>=0.3.10",
+]
+
 [tool.ruff]
 target-version = "py312"
 line-length = 100

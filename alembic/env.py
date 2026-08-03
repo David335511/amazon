@@ -10,20 +10,20 @@ import asyncio
 from logging.config import fileConfig
 from typing import Any
 
-from alembic import context
-from sqlalchemy import engine_from_config, pool
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy import pool
 
-from app.config import settings
-from app.domain.models.base import Base
+import app.documents.models
+import app.domain.models.brand
+import app.domain.models.category
+import app.domain.models.order
 
 # Import all models so Alembic can detect them
-import app.domain.models.product  # noqa: F401
-import app.domain.models.order  # noqa: F401
-import app.domain.models.brand  # noqa: F401
-import app.domain.models.category  # noqa: F401
-import app.domain.models.sourcing  # noqa: F401
+import app.domain.models.product
+import app.domain.models.sourcing
 import app.memory.models  # noqa: F401
+from alembic import context
+from app.config import settings
+from app.domain.models.base import Base
 
 # Alembic Config object
 config = context.config

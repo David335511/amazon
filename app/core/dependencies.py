@@ -19,6 +19,13 @@ from app.browser import BrowserAutomationConfig, BrowserManager, Crawler
 from app.config import settings
 from app.core.database import get_db
 from app.core.logging import get_logger
+from app.documents import (
+    DocumentConfig,
+    DocumentManager,
+    DocumentRepository,
+    build_extractors,
+    build_ocr_provider,
+)
 from app.domain.services.order_service import OrderService
 from app.domain.services.product_service import ProductService
 from app.events import EventBus, EventBusConfig, InMemoryEventBus
@@ -129,6 +136,37 @@ def get_vision_manager() -> VisionManager:
         cfg = VisionConfig.model_validate(settings.vision)
         _vision_manager = VisionManager(provider=build_vision_provider(cfg), config=cfg)
     return _vision_manager
+
+
+# Document intelligence system. The extractor map and OCR provider are shared
+# and stateless; a new manager is built per request with the DB session.
+_document_config: Any | None = None
+_document_extractors: Any | None = None
+_document_ocr: Any | None = None
+
+
+def get_document_manager(
+    db: AsyncSession = Depends(get_db),
+) -> DocumentManager:
+    """Build a `DocumentManager` bound to the request's DB session.
+
+    This is the ONLY entry point the rest of the platform uses to parse, store
+    and search documents (manuals, spec sheets, invoices).
+    """
+    global _document_config, _document_extractors, _document_ocr
+    if _document_config is None:
+        _document_config = DocumentConfig.model_validate(settings.documents)
+    if _document_extractors is None:
+        _document_extractors = build_extractors(_document_config)
+    if _document_ocr is None:
+        _document_ocr = build_ocr_provider(_document_config)
+    repo = DocumentRepository(db)
+    return DocumentManager(
+        repo,
+        config=_document_config,
+        extractors=_document_extractors,
+        ocr_provider=_document_ocr,
+    )
 
 
 # Memory system singletons. The embedding provider and vector store are shared

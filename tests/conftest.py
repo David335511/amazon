@@ -23,6 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.config import Settings
 from app.core.database import get_db
 from app.core.redis import get_redis
+from app.documents.models import Document  # noqa: F401  (register documents table)
 from app.domain.models.base import Base
 from app.main import create_app
 from app.memory.models import Memory  # noqa: F401  (register memories table)
