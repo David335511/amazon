@@ -36,6 +36,11 @@ from app.forecasting.models import (  # noqa: F401  (register forecasting tables
 )
 from app.main import create_app
 from app.memory.models import Memory  # noqa: F401  (register memories table)
+from app.multiagent.models import (  # noqa: F401  (register multi-agent tables)
+    MultiAgentEvaluation,
+    MultiAgentRun,
+    MultiAgentTrace,
+)
 from app.reverse_sourcing.models import (  # noqa: F401  (register reverse-sourcing tables)
     ReverseSourcingOffer,
     ReverseSourcingRun,

@@ -305,3 +305,15 @@ reverse_sourcing:
   forecast_horizon: 1
   # Ranking weights: price, speed, availability, discount, reliability, risk_inverse
   rank_weights: [0.30, 0.20, 0.15, 0.10, 0.15, 0.10]
+
+multiagent:
+  # Multi-agent orchestration framework. Ten specialist agents (research,
+  # matching, pricing, profit, forecast, risk, negotiation, inventory,
+  # reporting, planner) collaborate on a sourcing/fulfilment task via task
+  # delegation, shared memory, reasoning traces, tool usage, parallel
+  # execution, agent supervision and agent evaluation. Adding a new agent is a
+  # one-file change in app/multiagent/roles/ — no engine code changes.
+  enabled: true
+  max_parallel_agents: 10
+  max_delegations_per_agent: 10
+  store_shared_memory: true

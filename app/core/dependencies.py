@@ -51,6 +51,13 @@ from app.memory import (
     MemoryRepository,
     build_embedding_provider,
 )
+from app.multiagent import (
+    MemorySharing,
+    MultiAgentConfig,
+    MultiAgentManager,
+    MultiAgentRepository,
+)
+from app.multiagent.engine_tools import ReverseSourceTool, SupplierScoresTool
 from app.plugins.manager import PluginManager
 from app.reverse_sourcing import (
     PassthroughAsinResolver,
@@ -366,6 +373,44 @@ def get_reverse_sourcing_manager(
         resolver=_reverse_resolver,
         predictor=_reverse_predictor,
         intel_manager=intel,
+    )
+
+
+# Multi-agent orchestration framework. Config is shared and stateless; a new
+# manager is built per request with the DB session, binding the reverse-sourcing
+# and supplier-intel engines as agent tools and the AI memory system as the
+# durable memory-sharing backend.
+_multiagent_config: Any | None = None
+
+
+def get_multiagent_manager(
+    db: AsyncSession = Depends(get_db),
+) -> MultiAgentManager:
+    """Build a `MultiAgentManager` bound to the request's DB session.
+
+    This is the ONLY entry point the rest of the platform uses to run and
+    introspect multi-agent pipelines.
+    """
+    global _multiagent_config
+    if _multiagent_config is None:
+        _multiagent_config = MultiAgentConfig.model_validate(settings.multiagent)
+    repo = MultiAgentRepository(db)
+    tools = [
+        ReverseSourceTool(ReverseSourcingManager(
+            ReverseSourcingRepository(db),
+            config=ReverseSourcingConfig.model_validate(settings.reverse_sourcing),
+            provider=PluginManagerProvider(PluginManager()),
+        )),
+        SupplierScoresTool(SupplierIntelManager(
+            SupplierIntelRepository(db),
+            config=SupplierIntelConfig.model_validate(settings.supplier_intel),
+        )),
+    ]
+    return MultiAgentManager(
+        repo,
+        tools=tools,
+        memory_sharing=MemorySharing(),
+        config=_multiagent_config,
     )
 
 

@@ -13,6 +13,7 @@ from app.api.v1.health import router as health_router
 from app.api.v1.i18n import router as i18n_router
 from app.api.v1.marketplaces import router as marketplaces_router
 from app.api.v1.memory import router as memory_router
+from app.api.v1.multiagent import router as multiagent_router
 from app.api.v1.orders import router as orders_router
 from app.api.v1.products import router as products_router
 from app.api.v1.products_sourcing import router as products_sourcing_router
@@ -37,6 +38,7 @@ router.include_router(forecasting_router)
 router.include_router(i18n_router)
 router.include_router(marketplaces_router)
 router.include_router(memory_router)
+router.include_router(multiagent_router)
 router.include_router(health_router)
 router.include_router(products_router)
 router.include_router(orders_router)
