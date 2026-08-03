@@ -112,8 +112,15 @@ class RedisConfig(BaseSettings):
         validation_alias="REDIS_URL",
     )
     socket_connect_timeout: int = 5
-    socket_timeout: int = 5
+    # Must be LARGER than the max BLPOP block timeout used by the agent workers
+    # (default 5s). If socket_timeout <= blpop timeout, an empty-queue BLPOP holds
+    # the connection for the full block and the client's read timeout fires first,
+    # raising "Timeout reading from ..." on every empty dequeue (Upstash proxy).
+    socket_timeout: int = 20
     retry_on_timeout: bool = True
+    # Keep connections alive through serverless proxies (Upstash closes idle
+    # connections aggressively).
+    socket_keepalive: bool = True
     health_check_interval: int = 30
 
     model_config = SettingsConfigDict(extra="ignore")

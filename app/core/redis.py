@@ -33,6 +33,7 @@ async def init_redis() -> None:
         socket_timeout=settings.redis.socket_timeout,
         retry_on_timeout=settings.redis.retry_on_timeout,
         health_check_interval=settings.redis.health_check_interval,
+        socket_keepalive=settings.redis.socket_keepalive,
         decode_responses=True,
         protocol=2,
     )

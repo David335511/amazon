@@ -22,8 +22,11 @@ database:
 
 redis:
   socket_connect_timeout: 5
-  socket_timeout: 5
+  # Must exceed the agent worker's BLPOP block timeout (5s); otherwise an
+  # empty-queue BLPOP hits the client read timeout and logs "Timeout reading".
+  socket_timeout: 20
   retry_on_timeout: true
+  socket_keepalive: true
   health_check_interval: 30
 
 server:
