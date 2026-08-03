@@ -69,3 +69,13 @@ i18n:
   persist_to_db: true
   persist_to_user_profile: true
   cache_ttl: 3600
+
+multilingual:
+  enabled: true
+  default_language: en
+  supported_languages: [en, zh-CN]
+  detect_min_cjk_ratio: 0.5
+  detect_min_latin_ratio: 0.5
+  prompt_inject_language: true
+  llm_translate: true
+  llm_translate_fallback: true

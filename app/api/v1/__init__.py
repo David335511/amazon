@@ -17,6 +17,7 @@ from app.api.v1.learning import router as learning_router
 from app.api.v1.marketplaces import router as marketplaces_router
 from app.api.v1.memory import router as memory_router
 from app.api.v1.multiagent import router as multiagent_router
+from app.api.v1.multilingual import router as multilingual_router
 from app.api.v1.orders import router as orders_router
 from app.api.v1.products import router as products_router
 from app.api.v1.products_sourcing import router as products_sourcing_router
@@ -45,6 +46,7 @@ router.include_router(learning_router)
 router.include_router(marketplaces_router)
 router.include_router(memory_router)
 router.include_router(multiagent_router)
+router.include_router(multilingual_router)
 router.include_router(health_router)
 router.include_router(products_router)
 router.include_router(orders_router)

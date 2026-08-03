@@ -9,21 +9,19 @@ Design decisions:
 
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field
-
 
 # ═══════════════════════════════════════════════════════════════
 # Enums
 # ═══════════════════════════════════════════════════════════════
 
 
-class AssistantCapability(str, Enum):
+class AssistantCapability(StrEnum):
     """Capabilities the assistant can perform."""
 
     WHY_PROFITABLE = "why_profitable"
@@ -38,7 +36,7 @@ class AssistantCapability(str, Enum):
     GENERAL_QUERY = "general_query"
 
 
-class DataSource(str, Enum):
+class DataSource(StrEnum):
     """Data sources used in the response."""
 
     AMAZON_PRICES = "amazon_prices"
@@ -73,6 +71,9 @@ class AssistantQuery(BaseModel):
     days: int = Field(default=90, ge=1, le=365, description="Analysis window in days")
     include_sources: bool = Field(
         default=True, description="Include retrieved data sources in response",
+    )
+    language: str | None = Field(
+        default=None, description="Response language (e.g. 'en', 'zh-CN'). Defaults to the request's resolved language.",
     )
 
 
@@ -119,6 +120,15 @@ class AssistantResponse(BaseModel):
     # Structured data (for programmatic use)
     structured_data: dict[str, Any] | None = Field(
         default=None, description="Structured data extracted from the answer",
+    )
+
+    # Multilingual output (display labels are localized; enum values stay English)
+    language: str = Field(default="en", description="Language the answer is written in")
+    capability_label: str | None = Field(
+        default=None, description="Localized display label for the capability",
+    )
+    confidence_label: str | None = Field(
+        default=None, description="Localized display label for the confidence level",
     )
 
 

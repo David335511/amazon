@@ -246,6 +246,9 @@ class Settings(BaseSettings):
     # Raw YAML block for the internationalization system. Validated lazily into
     # `app.i18n.config.I18nConfig` by the DI layer.
     i18n: dict[str, Any] = Field(default_factory=dict)
+    # Raw YAML block for multilingual AI support. Validated lazily into
+    # `app.multilingual.config.MultilingualConfig` by the DI layer.
+    multilingual: dict[str, Any] = Field(default_factory=dict)
     # API security (Phase 0). Disabled by default so local dev is unaffected;
     # set `enabled: true` and provide API keys to protect the API.
     security: SecurityConfig = Field(default_factory=SecurityConfig)
@@ -324,6 +327,7 @@ class Settings(BaseSettings):
             knowledge_graph=dict(yaml_data.get("knowledge_graph", {})),
             learning=dict(yaml_data.get("learning", {})),
             i18n=dict(yaml_data.get("i18n", {})),
+            multilingual=dict(yaml_data.get("multilingual", {})),
             event_bus=event_bus_cfg,
             security=security_cfg,
         )

@@ -7,20 +7,30 @@ Endpoints:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import (
+    APIRouter,
+    Cookie,
+    Depends,
+    Header,
+    Query,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.providers import create_provider
-from app.assistant.engine import AssistantEngine, CAPABILITY_KEYWORDS
-from app.assistant.models import AssistantCapability, AssistantQuery, AssistantResponse
+from app.assistant.engine import AssistantEngine
+from app.assistant.models import AssistantQuery, AssistantResponse
 from app.core.database import get_db
+from app.core.dependencies import get_multilingual_manager
 from app.core.logging import get_logger
+from app.multilingual.manager import MultilingualManager
 
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/assistant", tags=["assistant"])
+
+ManagerDep = Annotated[MultilingualManager, Depends(get_multilingual_manager)]
 
 
 @router.post(
@@ -35,13 +45,32 @@ router = APIRouter(prefix="/assistant", tags=["assistant"])
 )
 async def ask_assistant(
     query: AssistantQuery,
+    multilingual: ManagerDep,
     provider: str | None = Query(
         default=None,
         description="LLM provider: anthropic, openai, ollama, or auto-detect",
     ),
+    lang: str | None = Query(
+        default=None,
+        description="Response language: en, zh-CN (overrides body/request resolution)",
+    ),
+    lang_cookie: str | None = Cookie(default=None, alias="lang"),
+    accept_language: str | None = Header(default=None),
     db: AsyncSession = Depends(get_db),
 ) -> AssistantResponse:
-    """Ask the AI assistant a question."""
+    """Ask the AI assistant a question, in the selected language.
+
+    The response language resolves with priority: ``?lang=``/body ``language`` >
+    ``lang`` cookie > ``Accept-Language`` header > stored preference > default. AI
+    reasoning stays English internally; only the final answer is produced in the
+    selected language.
+    """
+    resolved = await multilingual.resolve_current(
+        query=lang or query.language,
+        cookie=lang_cookie,
+        header=_parse_accept_language(accept_language),
+    )
+
     # Create LLM provider if specified
     llm_provider = create_provider(provider_type=provider)
 
@@ -50,11 +79,19 @@ async def ask_assistant(
         db=db,
         llm_provider=llm_provider,
         prompt_version="assistant_v1",
+        multilingual=multilingual,
+        language=resolved,
     )
 
     # Answer
     response = await engine.answer(query)
     return response
+
+
+def _parse_accept_language(header: str | None) -> str | None:
+    if not header:
+        return None
+    return header.split(",")[0].split(";")[0].strip()
 
 
 @router.get(

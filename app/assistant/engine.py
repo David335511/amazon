@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,6 +28,9 @@ from app.assistant.models import (
 from app.assistant.retriever import AssistantRetriever
 from app.core.logging import get_logger
 from app.plugins.manager import PluginManager
+
+if TYPE_CHECKING:
+    from app.multilingual.manager import MultilingualManager
 
 logger = get_logger(__name__)
 
@@ -60,6 +63,8 @@ class AssistantEngine:
         llm_provider: LLMProvider | None = None,
         plugin_manager: PluginManager | None = None,
         prompt_version: str = "assistant_v1",
+        multilingual: MultilingualManager | None = None,
+        language: str = "en",
     ) -> None:
         self._retriever = AssistantRetriever(
             db=db,
@@ -67,6 +72,8 @@ class AssistantEngine:
         )
         self._llm_provider = llm_provider
         self._prompt_version = prompt_version
+        self._multilingual = multilingual
+        self._language = language
 
     async def answer(self, query: AssistantQuery) -> AssistantResponse:
         """Answer a user question using retrieval + LLM.
@@ -98,6 +105,13 @@ class AssistantEngine:
         if self._llm_provider is not None and prompts is not None:
             try:
                 system_prompt, user_prompt = prompts
+                # Prompt injection (English instruction): ask the model to reply in
+                # the selected language. Reasoning stays English; only output is
+                # localized. Keeps codes/ASINs/SKUs/numbers verbatim.
+                if self._multilingual is not None and self._language != "en":
+                    system_prompt = self._multilingual.build_system_instruction(
+                        system_prompt, self._language,
+                    )
                 response = await self._llm_provider.generate_with_retry(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
@@ -106,7 +120,7 @@ class AssistantEngine:
                 parsed = self._parse_json_response(response.content)
                 latency = (time.monotonic() - start) * 1000
 
-                return AssistantResponse(
+                result = AssistantResponse(
                     answer=parsed.get("answer", "Analysis complete."),
                     capability=capability,
                     confidence=parsed.get("confidence", "medium"),
@@ -117,6 +131,9 @@ class AssistantEngine:
                     latency_ms=round(latency, 2),
                     structured_data=parsed.get("structured_data"),
                 )
+                if self._multilingual is not None:
+                    return self._multilingual.localize_labels(result, self._language)
+                return result
             except Exception as exc:
                 logger.warning("LLM answer failed, using fallback: %s", exc)
 
@@ -243,22 +260,29 @@ class AssistantEngine:
         contexts: list[RetrievedContext],
         start: float,
     ) -> AssistantResponse:
-        """Generate a rule-based answer when LLM is unavailable."""
+        """Generate a rule-based answer when LLM is unavailable.
+
+        Uses localized templates when multilingual support is enabled.
+        """
         latency = (time.monotonic() - start) * 1000
 
-        # Build answer from retrieved context
-        parts = [f"Analysis for: {query.question}", ""]
-        for ctx in contexts:
-            parts.append(f"• {ctx.summary}")
+        if self._multilingual is not None:
+            answer = self._multilingual.fallback_answer(
+                query.question, contexts, self._language,
+            )
+        else:
+            # English fallback template (no multilingual support configured).
+            parts = [f"Analysis for: {query.question}", ""]
+            for ctx in contexts:
+                parts.append(f"• {ctx.summary}")
+            if not contexts:
+                parts.append("No data was found for this query. Try specifying a product ID or ASIN.")
+            parts.append("")
+            parts.append("This is a rule-based response. For deeper analysis, configure an LLM provider.")
+            answer = "\n".join(parts)
 
-        if not contexts:
-            parts.append("No data was found for this query. Try specifying a product ID or ASIN.")
-
-        parts.append("")
-        parts.append("This is a rule-based response. For deeper analysis, configure an LLM provider.")
-
-        return AssistantResponse(
-            answer="\n".join(parts),
+        result = AssistantResponse(
+            answer=answer,
             capability=capability,
             confidence="low",
             contexts=contexts if query.include_sources else [],
@@ -267,6 +291,9 @@ class AssistantEngine:
             prompt_version=self._prompt_version,
             latency_ms=round(latency, 2),
         )
+        if self._multilingual is not None:
+            return self._multilingual.localize_labels(result, self._language)
+        return result
 
     # ═══════════════════════════════════════════════════════════════
     # JSON Parsing

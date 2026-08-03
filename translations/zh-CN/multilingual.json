@@ -1,0 +1,82 @@
+{
+  "labels": {
+    "confidence": "置信度",
+    "capability": "能力",
+    "source": "来源",
+    "data_source": "数据来源",
+    "language": "语言",
+    "recommendation": "推荐",
+    "notification": "通知",
+    "report": "报告",
+    "email": "邮件",
+    "chart": "图表",
+    "table": "表格",
+    "trend": "趋势",
+    "product": "商品",
+    "quantity": "数量",
+    "unit_price": "单价",
+    "total": "总计",
+    "supplier": "供应商",
+    "price": "价格",
+    "moq": "最小起订量",
+    "lead_time": "交货周期",
+    "savings": "预计节省",
+    "reason": "原因",
+    "responding_in": "语言：{language}"
+  },
+  "confidence": {
+    "very_high": "非常高",
+    "high": "高",
+    "medium": "中",
+    "low": "低",
+    "very_low": "非常低"
+  },
+  "trend": {
+    "up": "上升",
+    "down": "下降",
+    "flat": "平稳",
+    "seasonal": "季节性"
+  },
+  "restock": {
+    "buy_now": "立即采购",
+    "buy_soon": "尽快采购",
+    "wait": "等待",
+    "emergency": "紧急补货"
+  },
+  "capability": {
+    "why_profitable": "盈利分析",
+    "find_similar": "相似商品",
+    "predict_next_sale": "销售预测",
+    "estimate_future_roi": "未来投资回报率估算",
+    "summarize_opportunities": "商机摘要",
+    "find_replacement_suppliers": "备选供应商",
+    "buy_more_inventory": "库存决策",
+    "generate_purchase_order": "采购订单",
+    "explain_calculation": "计算明细",
+    "general_query": "常见问题"
+  },
+  "data_source": {
+    "amazon_prices": "亚马逊价格",
+    "supplier_prices": "供应商价格",
+    "seller_counts": "卖家数量",
+    "sales_estimates": "销量估算",
+    "historical_fees": "历史费用",
+    "historical_inventory": "历史库存",
+    "profit_calculations": "利润计算",
+    "product_database": "商品数据库",
+    "supplier_database": "供应商数据库",
+    "ai_reasoning": "AI 推理"
+  },
+  "content": {
+    "analysis_for": "分析：{question}",
+    "no_data": "未找到与该查询相关的数据。请指定商品 ID 或 ASIN。",
+    "rule_based": "这是基于规则的响应。如需更深入的分析，请配置 LLM 提供方。",
+    "translated": "已翻译为{language}"
+  },
+  "email": {
+    "greeting": "您好，",
+    "signature": "亚马逊 AI 商务平台",
+    "subject_prefix": "[亚马逊 AI] ",
+    "footer": "此邮件由亚马逊 AI 商务平台自动生成。"
+  }
+}

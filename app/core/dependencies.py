@@ -15,6 +15,7 @@ from typing import Any
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.ai.providers import create_provider
 from app.browser import BrowserAutomationConfig, BrowserManager, Crawler
 from app.config import settings
 from app.core.database import get_db
@@ -70,6 +71,7 @@ from app.multiagent import (
     MultiAgentRepository,
 )
 from app.multiagent.engine_tools import ReverseSourceTool, SupplierScoresTool
+from app.multilingual import MultilingualConfig, MultilingualManager
 from app.plugins.manager import PluginManager
 from app.reverse_sourcing import (
     PassthroughAsinResolver,
@@ -474,6 +476,8 @@ def get_knowledge_graph_manager(
 _learning_config: Any | None = None
 # Internationalization config (shared, stateless).
 _i18n_config: Any | None = None
+# Multilingual AI config (shared, stateless).
+_multilingual_config: Any | None = None
 
 
 def get_learning_manager(
@@ -506,6 +510,32 @@ def get_i18n_manager(
         _i18n_config = I18nConfig.model_validate(settings.i18n)
     repo = I18nRepository(db)
     return I18nManager(repo, config=_i18n_config, session=db)
+
+
+def get_multilingual_manager(
+    db: AsyncSession = Depends(get_db),
+) -> MultilingualManager:
+    """Build a `MultilingualManager` bound to the request's DB session.
+
+    This is the ONLY entry point the rest of the platform uses to make the AI
+    assistant (and its charts, tables, recommendations, notifications, reports
+    and emails) respond in the user's selected language.
+
+    Prompts remain English internally; only the final user-facing output is
+    localized. An optional LLM is wired for prose translation when configured;
+    otherwise structured content localizes deterministically.
+    """
+    global _multilingual_config
+    if _multilingual_config is None:
+        _multilingual_config = MultilingualConfig.model_validate(settings.multilingual)
+    i18n = get_i18n_manager(db)
+    llm = None
+    if _multilingual_config.llm_translate:
+        try:
+            llm = create_provider()
+        except Exception:  # pragma: no cover - provider auto-detect failure
+            llm = None
+    return MultilingualManager(i18n=i18n, config=_multilingual_config, llm_provider=llm)
 
 
 class Container:
