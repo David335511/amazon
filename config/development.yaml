@@ -331,3 +331,19 @@ experiments:
   code_version: ""
   max_delegations_per_agent: 10
   store_shared_memory: true
+
+knowledge_graph:
+  # Commerce knowledge graph. Represents products, brands, categories, suppliers,
+  # marketplaces, customers, AI decisions, historical events, price changes,
+  # inventory and seasonality as a labelled, weighted graph; exposes traversal,
+  # semantic search, relationship discovery, recommendations, similarity,
+  # profitable clusters, hidden opportunities, and explainable reasoning.
+  enabled: true
+  semantic_top_k: 10
+  traversal_max_depth: 3
+  page_rank_iterations: 30
+  recommend_top_k: 10
+  min_cluster_profit: 0.0
+  max_clusters: 10
+  max_opportunities: 20
+  max_batch_size: 500

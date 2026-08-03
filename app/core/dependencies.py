@@ -48,6 +48,11 @@ from app.forecasting import (
 )
 from app.infrastructure.repositories.order_repository import OrderRepository
 from app.infrastructure.repositories.product_repository import ProductRepository
+from app.knowledge_graph import (
+    KnowledgeGraphConfig,
+    KnowledgeGraphManager,
+    PostgresGraphStore,
+)
 from app.marketplaces.manager import MarketplaceManager
 from app.memory import (
     InMemoryVectorStore,
@@ -438,6 +443,28 @@ def get_experiment_manager(
         _experiment_config = ExperimentConfig.model_validate(settings.experiments)
     repo = ExperimentRepository(db)
     return ExperimentManager(repo, config=_experiment_config)
+
+
+# Commerce knowledge graph. The config is shared and stateless; a new manager is
+# built per request with the DB session. The PostgresGraphStore backs the GraphStore
+# interface; a future graph DB can be swapped in here without touching the API.
+_knowledge_graph_config: Any | None = None
+
+
+def get_knowledge_graph_manager(
+    db: AsyncSession = Depends(get_db),
+) -> KnowledgeGraphManager:
+    """Build a `KnowledgeGraphManager` bound to the request's DB session.
+
+    This is the ONLY entry point the rest of the platform uses to model and query
+    the commerce knowledge graph (traversal, semantic search, related entities,
+    recommendations, profitable clusters, hidden opportunities, reasoning).
+    """
+    global _knowledge_graph_config
+    if _knowledge_graph_config is None:
+        _knowledge_graph_config = KnowledgeGraphConfig.model_validate(settings.knowledge_graph)
+    store = PostgresGraphStore(db)
+    return KnowledgeGraphManager(store, config=_knowledge_graph_config)
 
 
 class Container:

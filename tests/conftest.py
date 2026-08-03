@@ -41,6 +41,10 @@ from app.forecasting.models import (  # noqa: F401  (register forecasting tables
     Forecast,
     ForecastActual,
 )
+from app.knowledge_graph.models import (  # noqa: F401  (register knowledge-graph tables)
+    GraphEdge,
+    GraphNode,
+)
 from app.main import create_app
 from app.memory.models import Memory  # noqa: F401  (register memories table)
 from app.multiagent.models import (  # noqa: F401  (register multi-agent tables)
