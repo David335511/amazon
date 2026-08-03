@@ -46,6 +46,7 @@ from app.forecasting import (
     ForecastingRepository,
     build_models,
 )
+from app.i18n import I18nConfig, I18nManager, I18nRepository
 from app.infrastructure.repositories.order_repository import OrderRepository
 from app.infrastructure.repositories.product_repository import ProductRepository
 from app.knowledge_graph import (
@@ -471,6 +472,8 @@ def get_knowledge_graph_manager(
 # Continuous-learning platform. The config is shared and stateless; a new
 # manager is built per request with the DB session.
 _learning_config: Any | None = None
+# Internationalization config (shared, stateless).
+_i18n_config: Any | None = None
 
 
 def get_learning_manager(
@@ -487,6 +490,22 @@ def get_learning_manager(
         _learning_config = LearningConfig.model_validate(settings.learning)
     repo = LearningRepository(db)
     return LearningManager(repo, config=_learning_config)
+
+
+def get_i18n_manager(
+    db: AsyncSession = Depends(get_db),
+) -> I18nManager:
+    """Build an `I18nManager` bound to the request's DB session.
+
+    This is the ONLY entry point the rest of the platform uses to resolve
+    languages, translate text, format locale values, switch languages (with
+    browser + database + user-profile persistence) and validate translations.
+    """
+    global _i18n_config
+    if _i18n_config is None:
+        _i18n_config = I18nConfig.model_validate(settings.i18n)
+    repo = I18nRepository(db)
+    return I18nManager(repo, config=_i18n_config, session=db)
 
 
 class Container:

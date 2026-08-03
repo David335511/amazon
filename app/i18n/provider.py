@@ -10,18 +10,18 @@ Design decisions:
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import AsyncGenerator
 from contextvars import ContextVar
 from typing import Any
 
-from fastapi import Cookie, Depends, Header, Query, Request
+from fastapi import Cookie, Depends, Header, Request
 from redis.asyncio import Redis
 
 from app.core.logging import get_logger
 from app.core.redis import get_redis
 from app.i18n.cache import TranslationCache
 from app.i18n.loader import TranslationLoader
+from app.i18n.locale import LocaleManager
 from app.i18n.service import TranslationService
 
 logger = get_logger(__name__)

@@ -59,3 +59,13 @@ features:
   enable_swagger: false
   enable_metrics: true
   rate_limiting: true
+
+i18n:
+  enabled: true
+  default_language: en
+  fallback_language: en
+  supported_languages: [en, zh-CN]
+  cookie_name: lang
+  persist_to_db: true
+  persist_to_user_profile: true
+  cache_ttl: 3600

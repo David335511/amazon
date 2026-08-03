@@ -33,6 +33,7 @@ from app.experiments.models import (  # noqa: F401  (register experiment tables)
     Variant,
 )
 from app.features.models import FeatureValue  # noqa: F401  (register feature store table)
+from app.i18n.models import LanguagePreference  # noqa: F401  (register i18n preference table)
 from app.finance.models import (  # noqa: F401  (register finance tables)
     CapitalAllocation,
     CashTransaction,

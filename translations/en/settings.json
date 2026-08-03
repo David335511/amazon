@@ -1,21 +1,63 @@
 {
   "title": "Settings",
-  "language": "Language",
-  "select_language": "Select Language",
-  "current_language": "Current Language",
-  "save_settings": "Save Settings",
-  "settings_saved": "Settings saved successfully",
-  "notifications": "Notifications",
-  "email_notifications": "Email Notifications",
-  "push_notifications": "Push Notifications",
-  "theme": "Theme",
-  "dark_mode": "Dark Mode",
-  "light_mode": "Light Mode",
-  "timezone": "Timezone",
-  "date_format": "Date Format",
-  "number_format": "Number Format",
-  "currency_format": "Currency Format",
-  "profile": "Profile",
-  "display_name": "Display Name",
-  "email": "Email"
+  "subtitle": "Manage your profile, preferences and security",
+  "sections": {
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "security": "Security",
+    "localization": "Localization",
+    "display": "Display",
+    "billing": "Billing"
+  },
+  "profile": {
+    "display_name": "Display name",
+    "email": "Email",
+    "username": "Username",
+    "avatar": "Avatar",
+    "role": "Role",
+    "save": "Save profile",
+    "saved": "Profile updated"
+  },
+  "notifications": {
+    "email": "Email notifications",
+    "push": "Push notifications",
+    "in_app": "In-app notifications",
+    "frequency": "Frequency",
+    "digest": "Daily digest",
+    "instant": "Instant",
+    "never": "Never"
+  },
+  "security": {
+    "change_password": "Change password",
+    "two_factor": "Two-factor authentication",
+    "api_keys": "API keys",
+    "sessions": "Active sessions",
+    "current_password": "Current password",
+    "new_password": "New password",
+    "confirm_password": "Confirm password"
+  },
+  "localization": {
+    "language": "Language",
+    "language_hint": "Switch language instantly without reloading the page",
+    "currency": "Currency",
+    "timezone": "Timezone",
+    "date_format": "Date format",
+    "number_format": "Number format",
+    "first_day_of_week": "First day of week"
+  },
+  "display": {
+    "theme": "Theme",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "theme_system": "System",
+    "density": "Density",
+    "compact": "Compact",
+    "comfortable": "Comfortable"
+  },
+  "actions": {
+    "save": "Save changes",
+    "saved": "Settings saved",
+    "reset": "Reset to defaults",
+    "unsaved": "You have unsaved changes"
+  }
 }

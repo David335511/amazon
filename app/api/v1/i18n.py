@@ -1,174 +1,193 @@
-"""Internationalization API routes — language switching and translation management.
+"""Internationalization API — language resolution, switching, translation and validation.
 
 Endpoints:
-- GET    /i18n/languages — List available languages
-- GET    /i18n/current — Get current language
-- POST   /i18n/switch — Switch language
-- GET    /i18n/translations/{module} — Get translations for a module
-- GET    /i18n/validate — Validate translation completeness
+- GET   /i18n/capabilities       — supported languages, modules, formats
+- GET   /i18n/languages          — list available languages
+- GET   /i18n/current            — resolve the current language for this request
+- POST  /i18n/switch             — switch language (persists to cookie + DB + profile)
+- GET   /i18n/preference         — stored language preference for a user/device
+- GET   /i18n/bundle             — full translation bundle for a language (lazy load)
+- GET   /i18n/translations/{module} — a single module's translations
+- GET   /i18n/locale/{language}  — exemplar locale formatting (date/number/currency/tz/plural)
+- POST  /i18n/validate           — report missing / unused / duplicate keys
+- POST  /i18n/reload             — drop caches and reload translation files
+- GET   /i18n/stats              — platform aggregates
 """
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, Header, Query, Response
-from redis.asyncio import Redis
-
-from app.core.logging import get_logger
-from app.core.redis import get_redis
-from app.i18n.cache import TranslationCache
-from app.i18n.loader import TranslationLoader
-from app.i18n.provider import (
-    SUPPORTED_LANGUAGES,
-    LanguageProvider,
-    get_language_provider,
+from fastapi import (
+    APIRouter,
+    Cookie,
+    Depends,
+    Header,
+    HTTPException,
+    Query,
+    Request,
+    Response,
+    status,
 )
-from app.i18n.service import TranslationService
-from app.i18n.validator import TranslationValidator
 
-logger = get_logger(__name__)
+from app.core.dependencies import get_i18n_manager
+from app.i18n import I18nManager
+from app.i18n.errors import LanguageUnsupportedError
+from app.i18n.schemas import (
+    CurrentLanguageRead,
+    I18nCapabilities,
+    I18nStats,
+    LanguageListRead,
+    LocaleFormattingRead,
+    PreferenceRead,
+    ReloadResult,
+    SwitchResult,
+    TranslationBundleRead,
+    TranslationModuleRead,
+    ValidationRead,
+)
 
 router = APIRouter(prefix="/i18n", tags=["i18n"])
 
-
-@router.get(
-    "/languages",
-    summary="List available languages",
-    description="Returns all available languages with display names.",
-)
-async def list_languages() -> dict[str, Any]:
-    """List all available languages."""
-    loader = TranslationLoader()
-    languages = loader.list_languages()
-    from app.i18n.locale import BUILTIN_LOCALES
-    result = []
-    for lang in languages:
-        config = BUILTIN_LOCALES.get(lang)
-        result.append({
-            "code": lang,
-            "display_name": config.display_name if config else lang,
-            "native_name": config.native_name if config else lang,
-            "is_current": False,
-        })
-    return {"languages": result, "total": len(result)}
+ManagerDep = Annotated[I18nManager, Depends(get_i18n_manager)]
 
 
-@router.get(
-    "/current",
-    summary="Get current language",
-    description="Returns the currently active language.",
-)
-async def get_current_language(
-    lang_provider: LanguageProvider = Depends(get_language_provider),
-) -> dict[str, Any]:
-    """Get the current language."""
-    from app.i18n.locale import BUILTIN_LOCALES
-    config = BUILTIN_LOCALES.get(lang_provider.lang)
-    return {
-        "language": lang_provider.lang,
-        "display_name": config.display_name if config else lang_provider.lang,
-        "native_name": config.native_name if config else lang_provider.lang,
-    }
+def _device_id(request: Request) -> str | None:
+    return request.headers.get("X-Device-Id")
 
 
-@router.post(
-    "/switch",
-    summary="Switch language",
-    description="Switch the active language. Sets a cookie and returns translations.",
-    response_model=None,
-)
+@router.get("/capabilities", response_model=I18nCapabilities)
+async def capabilities(manager: ManagerDep) -> I18nCapabilities:
+    """Supported languages, modules, plural rules and currency codes."""
+    return manager.capabilities()
+
+
+@router.get("/languages", response_model=LanguageListRead)
+async def list_languages(manager: ManagerDep) -> LanguageListRead:
+    """List all supported languages with display/native names."""
+    return manager.list_languages()
+
+
+@router.get("/current", response_model=CurrentLanguageRead)
+async def current_language(
+    manager: ManagerDep,
+    request: Request,
+    lang_cookie: str | None = Cookie(default=None, alias="lang"),
+    accept_language: str | None = Header(default=None),
+) -> CurrentLanguageRead:
+    """Resolve the current language for this request.
+
+    Priority: query param > cookie > Accept-Language header > stored preference
+    (for a user/device) > default.
+    """
+    query = request.query_params.get("lang")
+    resolved = await manager.resolve(
+        query=query,
+        cookie=lang_cookie,
+        header=_parse_accept_language(accept_language),
+        user_id=request.query_params.get("user_id"),
+        device_id=_device_id(request),
+    )
+    return manager.current(resolved)
+
+
+@router.post("/switch", response_model=SwitchResult)
 async def switch_language(
-    language: str = Query(..., description="Language code (e.g., 'en', 'zh-CN')"),
-    response: Response = None,
-) -> dict[str, Any]:
-    """Switch the active language."""
-    if language not in SUPPORTED_LANGUAGES:
-        from fastapi import HTTPException, status
+    manager: ManagerDep,
+    request: Request,
+    response: Response,
+    language: str = Query(..., description="Language code (e.g. 'en', 'zh-CN')"),
+    user_id: str | None = Query(default=None),
+) -> SwitchResult:
+    """Switch the active language and persist it everywhere.
+
+    Sets a browser cookie, upserts the database preference (per user/device) and
+    writes the user's settings profile — so the choice survives across requests,
+    devices and sessions without any page refresh.
+    """
+    try:
+        return await manager.switch(
+            language,
+            response=response,
+            user_id=user_id,
+            device_id=_device_id(request),
+            source="manual" if user_id else "cookie",
+        )
+    except LanguageUnsupportedError as exc:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported language '{language}'. Supported: {SUPPORTED_LANGUAGES}",
-        )
-
-    # Set cookie so subsequent requests detect the language
-    if response is not None:
-        response.set_cookie(
-            key="lang",
-            value=language,
-            max_age=31536000,
-            httponly=True,
-            samesite="lax",
-        )
-
-    # Preload translations for the new language
-    loader = TranslationLoader()
-    modules = loader.list_modules(language)
-    for module in modules:
-        loader.load(language, module)
-
-    from app.i18n.locale import BUILTIN_LOCALES
-    config = BUILTIN_LOCALES.get(language)
-
-    return {
-        "status": "switched",
-        "language": language,
-        "display_name": config.display_name if config else language,
-        "native_name": config.native_name if config else language,
-    }
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+        ) from exc
 
 
-@router.get(
-    "/translations/{module:path}",
-    summary="Get translations for a module",
-    description="Returns all translation keys for a specific module in the current language.",
-)
-async def get_translations(
+@router.get("/preference", response_model=PreferenceRead)
+async def get_preference(
+    manager: ManagerDep,
+    request: Request,
+    user_id: str | None = Query(default=None),
+) -> PreferenceRead:
+    """Return the stored language preference for a user/device (or null)."""
+    pref = await manager.get_preference(
+        user_id=user_id, device_id=_device_id(request),
+    )
+    if pref is None:
+        return PreferenceRead()
+    return PreferenceRead(**pref)
+
+
+@router.get("/bundle", response_model=TranslationBundleRead)
+async def get_bundle(
+    manager: ManagerDep,
+    request: Request,
+    language: str | None = Query(default=None),
+    use_cache: bool = Query(default=True),
+) -> TranslationBundleRead:
+    """Return the full translation bundle for a language (lazy-loaded)."""
+    query = language or request.query_params.get("lang")
+    resolved_lang = manager.switcher.normalize(query)
+    return await manager.get_bundle(resolved_lang, use_cache=use_cache)
+
+
+@router.get("/translations/{module:path}", response_model=TranslationModuleRead)
+async def get_module(
+    manager: ManagerDep,
     module: str,
-    lang_provider: LanguageProvider = Depends(get_language_provider),
-) -> dict[str, Any]:
-    """Get translations for a module."""
-    data = lang_provider.t.get_module(module)
-    return {
-        "language": lang_provider.lang,
-        "module": module,
-        "translations": data,
-        "key_count": len(data) if data else 0,
-    }
+    language: str | None = Query(default=None),
+) -> TranslationModuleRead:
+    """Return a single module's translations for the given language."""
+    return manager.get_module(manager.switcher.normalize(language), module)
 
 
-@router.get(
-    "/all",
-    summary="Get all translations",
-    description="Returns all translations for the current language.",
-)
-async def get_all_translations(
-    lang_provider: LanguageProvider = Depends(get_language_provider),
-) -> dict[str, Any]:
-    """Get all translations for the current language."""
-    data = lang_provider.t.get_all()
-    total_keys = sum(len(v) for v in data.values())
-    return {
-        "language": lang_provider.lang,
-        "modules": data,
-        "total_keys": total_keys,
-    }
+@router.get("/locale/{language}", response_model=LocaleFormattingRead)
+async def locale_formatting(
+    manager: ManagerDep, language: str
+) -> LocaleFormattingRead:
+    """Exemplar locale formatting for a language (dates/numbers/currency/tz/plural)."""
+    return manager.format(language)
 
 
-@router.get(
-    "/validate",
-    summary="Validate translations",
-    description="Validates that all translation keys exist in all languages.",
-)
-async def validate_translations() -> dict[str, Any]:
-    """Validate translation completeness."""
-    validator = TranslationValidator()
-    result = validator.validate()
-    return {
-        "is_valid": result.is_valid,
-        "total_keys": result.total_keys,
-        "errors": result.errors,
-        "warnings": result.warnings,
-        "missing_keys": result.missing_keys[:20],
-        "module_mismatches": result.module_mismatches,
-        "summary": result.summary(),
-    }
+@router.post("/validate", response_model=ValidationRead)
+async def validate_translations(
+    manager: ManagerDep,
+    include_code_usage: bool = Query(default=False),
+) -> ValidationRead:
+    """Validate translation completeness: missing / unused / duplicate keys."""
+    return manager.validate(include_code_usage=include_code_usage)
+
+
+@router.post("/reload", response_model=ReloadResult)
+async def reload_translations(manager: ManagerDep) -> ReloadResult:
+    """Drop caches and reload translation files from disk."""
+    return await manager.reload()
+
+
+@router.get("/stats", response_model=I18nStats)
+async def stats(manager: ManagerDep) -> I18nStats:
+    """Platform-wide i18n aggregates."""
+    return await manager.stats()
+
+
+def _parse_accept_language(header: str | None) -> str | None:
+    """Return the primary language from an Accept-Language header, if any."""
+    if not header:
+        return None
+    return header.split(",")[0].split(";")[0].strip()

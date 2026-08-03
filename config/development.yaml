@@ -364,3 +364,16 @@ learning:
   feature_reweight_min_abs_corr: 0.2
   max_predictions_per_scan: 5000
   max_recommendations_per_run: 50
+
+i18n:
+  # Internationalization system. Languages switch instantly (no page refresh)
+  # and persist to the browser cookie, the database (i18n_language_preferences)
+  # and the user profile. System logs, DB fields and API field names stay English.
+  enabled: true
+  default_language: en
+  fallback_language: en
+  supported_languages: [en, zh-CN]
+  cookie_name: lang
+  persist_to_db: true
+  persist_to_user_profile: true
+  cache_ttl: 3600

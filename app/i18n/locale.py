@@ -10,9 +10,8 @@ Design decisions:
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -63,7 +62,7 @@ class LocaleConfig:
 
 PLURAL_RULES: dict[str, Any] = {
     "en": lambda n: "one" if n == 1 else "other",
-    "zh": lambda n: "other",  # Chinese doesn't have plural forms
+    "zh": lambda _: "other",  # Chinese doesn't have plural forms
 }
 
 # ── Built-in Locales ─────────────────────────────────────────
@@ -98,6 +97,7 @@ BUILTIN_LOCALES: dict[str, LocaleConfig] = {
         currency_code="CNY",
         currency_position="before",
         plural_fn="zh",
+        plural_forms=["other"],  # Chinese has no plural inflection
         first_day_of_week=1,
     ),
 }
@@ -228,7 +228,7 @@ class LocaleManager:
     def format_currency(
         self,
         value: int | float | Decimal | str | None,
-        currency: str | None = None,
+        currency: str | None = None,  # noqa: ARG002 - kept for interface parity
     ) -> str:
         """Format a monetary value with currency symbol.
 
@@ -262,17 +262,25 @@ class LocaleManager:
         Returns:
             "{count} {word}" with correct plural form.
         """
-        rule_fn = PLURAL_RULES.get(self._config.plural_fn, PLURAL_RULES["en"])
-        form = rule_fn(count)
-
-        if form == "one" or count == 1:
+        # Languages with a single plural form (e.g. Chinese) never inflect the
+        # noun — do not append a plural suffix.
+        if "one" not in self._config.plural_forms:
             word = singular
-        elif plural:
-            word = plural
         else:
-            word = singular + "s"
+            rule_fn = PLURAL_RULES.get(self._config.plural_fn, PLURAL_RULES["en"])
+            form = rule_fn(count)
+            if form == "one" or count == 1:
+                word = singular
+            elif plural:
+                word = plural
+            else:
+                word = singular + "s"
 
-        return f"{self.format_number(count)} {word}"
+        return f"{self._format_count(count)} {word}"
+
+    def _format_count(self, count: int) -> str:
+        """Format a count as an integer (no decimal places) for pluralization."""
+        return self.format_number(count, decimal_places=0) if isinstance(count, int) else self.format_number(count)
 
     # ── Timezone ────────────────────────────────────────────
 

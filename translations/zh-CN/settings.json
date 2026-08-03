@@ -1,21 +1,63 @@
 {
   "title": "设置",
-  "language": "语言",
-  "select_language": "选择语言",
-  "current_language": "当前语言",
-  "save_settings": "保存设置",
-  "settings_saved": "设置保存成功",
-  "notifications": "通知",
-  "email_notifications": "邮件通知",
-  "push_notifications": "推送通知",
-  "theme": "主题",
-  "dark_mode": "深色模式",
-  "light_mode": "浅色模式",
-  "timezone": "时区",
-  "date_format": "日期格式",
-  "number_format": "数字格式",
-  "currency_format": "货币格式",
-  "profile": "个人资料",
-  "display_name": "显示名称",
-  "email": "邮箱"
+  "subtitle": "管理您的资料、偏好与安全",
+  "sections": {
+    "profile": "个人资料",
+    "notifications": "通知",
+    "security": "安全",
+    "localization": "本地化",
+    "display": "显示",
+    "billing": "账单"
+  },
+  "profile": {
+    "display_name": "显示名称",
+    "email": "邮箱",
+    "username": "用户名",
+    "avatar": "头像",
+    "role": "角色",
+    "save": "保存资料",
+    "saved": "资料已更新"
+  },
+  "notifications": {
+    "email": "邮件通知",
+    "push": "推送通知",
+    "in_app": "站内通知",
+    "frequency": "频率",
+    "digest": "每日摘要",
+    "instant": "即时",
+    "never": "从不"
+  },
+  "security": {
+    "change_password": "修改密码",
+    "two_factor": "双重身份验证",
+    "api_keys": "API密钥",
+    "sessions": "活跃会话",
+    "current_password": "当前密码",
+    "new_password": "新密码",
+    "confirm_password": "确认新密码"
+  },
+  "localization": {
+    "language": "语言",
+    "language_hint": "无需刷新页面即可即时切换语言",
+    "currency": "货币",
+    "timezone": "时区",
+    "date_format": "日期格式",
+    "number_format": "数字格式",
+    "first_day_of_week": "每周第一天"
+  },
+  "display": {
+    "theme": "主题",
+    "theme_light": "浅色",
+    "theme_dark": "深色",
+    "theme_system": "跟随系统",
+    "density": "密度",
+    "compact": "紧凑",
+    "comfortable": "舒适"
+  },
+  "actions": {
+    "save": "保存更改",
+    "saved": "设置已保存",
+    "reset": "恢复默认",
+    "unsaved": "您有未保存的更改"
+  }
 }

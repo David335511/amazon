@@ -13,10 +13,10 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from app.core.logging import get_logger
 from app.i18n.cache import TranslationCache
 from app.i18n.loader import TranslationLoader
 from app.i18n.locale import LocaleManager
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -30,7 +30,7 @@ class TranslationService:
     Usage:
         t = TranslationService('zh-CN')
         t.t('dashboard.title')  # '选品智能仪表盘'
-        t.t('common.page', page=1, total=5)  # '第1页，共5页'
+        t.t('common.page', page=1, total=5)  # '第1页, 共5页'
         t.lc.format_date(dt)  # Locale-aware date formatting
     """
 
@@ -114,21 +114,19 @@ class TranslationService:
 
     def _load(self, module: str) -> dict[str, Any]:
         """Load translations for a module, checking cache first."""
-        # Try cache
+        # Try cache (sync context only — skip when an event loop is already running).
         if self._cache is not None:
-            import asyncio
             try:
+                import asyncio
+
                 loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    # Can't await in sync context, skip cache
-                    pass
-                else:
+                if not loop.is_running():
                     cached = loop.run_until_complete(
                         self._cache.get(self._language, module),
                     )
                     if cached is not None:
                         return cached
-            except (RuntimeError, Exception):
+            except Exception:
                 pass
 
         # Load from disk

@@ -59,3 +59,11 @@ features:
   enable_swagger: true
   enable_metrics: false
   rate_limiting: false
+
+i18n:
+  enabled: true
+  default_language: en
+  fallback_language: en
+  supported_languages: [en, zh-CN]
+  persist_to_db: true
+  persist_to_user_profile: true
