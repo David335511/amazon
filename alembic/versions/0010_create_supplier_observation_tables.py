@@ -20,7 +20,7 @@ import sqlalchemy as sa
 
 from alembic import op
 
-revision: str = "0010_create_supplier_observation_tables"
+revision: str = "0010_supplier_observations"
 down_revision: str | None = "0009_create_finance_tables"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

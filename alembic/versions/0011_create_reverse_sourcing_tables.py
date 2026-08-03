@@ -19,8 +19,8 @@ import sqlalchemy as sa
 
 from alembic import op
 
-revision: str = "0011_create_reverse_sourcing_tables"
-down_revision: str | None = "0010_create_supplier_observation_tables"
+revision: str = "0011_reverse_sourcing"
+down_revision: str | None = "0010_supplier_observations"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
