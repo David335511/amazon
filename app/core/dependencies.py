@@ -30,6 +30,11 @@ from app.domain.services.order_service import OrderService
 from app.domain.services.product_service import ProductService
 from app.events import EventBus, EventBusConfig, InMemoryEventBus
 from app.features import FeatureConfig, FeatureManager, FeatureRepository, build_signal_provider
+from app.finance import (
+    FinanceConfig,
+    FinanceManager,
+    FinanceRepository,
+)
 from app.forecasting import (
     ForecastConfig,
     ForecastingManager,
@@ -267,6 +272,26 @@ def get_forecasting_manager(
         config=_forecast_config,
         models=_forecast_models,
     )
+
+
+# Financial optimization engine. The config is shared and stateless; a new
+# manager is built per request with the DB session.
+_finance_config: Any | None = None
+
+
+def get_finance_manager(
+    db: AsyncSession = Depends(get_db),
+) -> FinanceManager:
+    """Build a `FinanceManager` bound to the request's DB session.
+
+    This is the ONLY entry point the rest of the platform uses to track cash
+    and optimize capital allocation / ordering.
+    """
+    global _finance_config
+    if _finance_config is None:
+        _finance_config = FinanceConfig.model_validate(settings.finance)
+    repo = FinanceRepository(db)
+    return FinanceManager(repo, config=_finance_config)
 
 
 class Container:

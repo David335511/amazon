@@ -226,3 +226,38 @@ forecasting:
     - seasonal_average
     - persistence
     - llm_reasoning
+
+finance:
+  # Financial optimization engine. Tracks available cash, inventory value,
+  # expected payouts, credit-card cycles, cashback, reward points, purchase
+  # commitments, storage costs and capital allocation; recommends how many
+  # units to buy, when to buy/reorder, and which opportunity is most
+  # capital-efficient. Everything here is configurable.
+  enabled: true
+  currency: USD
+  starting_cash: 10000.0
+
+  # Credit cards
+  credit_card_limit: 5000.0
+  billing_cycle_days: 30
+  grace_period_days: 21
+
+  # Rewards
+  cashback_rate: 0.02
+  reward_points_value: 0.01
+  points_per_dollar: 1.0
+
+  # Costs
+  holding_cost_rate: 0.25       # annual % of inventory value
+  order_cost: 5.0               # fixed cost per purchase order
+
+  # Inventory / demand
+  service_level_z: 1.65         # 95% service level for safety stock
+  max_units_per_order: 1000
+
+  # Capital allocation
+  allocation_policy: efficiency # efficiency | equal | conservative
+  investable_fraction: 0.8      # fraction of usable capital to deploy
+  min_cash_reserve: 500.0       # cash held back before allocating
+
+  max_batch_size: 50

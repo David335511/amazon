@@ -26,6 +26,10 @@ from app.core.redis import get_redis
 from app.documents.models import Document  # noqa: F401  (register documents table)
 from app.domain.models.base import Base
 from app.features.models import FeatureValue  # noqa: F401  (register feature store table)
+from app.finance.models import (  # noqa: F401  (register finance tables)
+    CapitalAllocation,
+    CashTransaction,
+)
 from app.forecasting.models import (  # noqa: F401  (register forecasting tables)
     Forecast,
     ForecastActual,
