@@ -667,6 +667,12 @@ class AnalyticsRepository(BaseRepository[Product]):
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def find_by_upc(self, upc: str) -> Product | None:
+        """Find a product by UPC barcode."""
+        stmt = select(Product).where(Product.upc == upc)
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
+
     # ═══════════════════════════════════════════════════════════
     # Data Point Counts (for monitoring)
     # ═══════════════════════════════════════════════════════════

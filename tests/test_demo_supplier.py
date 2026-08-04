@@ -7,9 +7,12 @@ sourcing decisions (BUY / WATCH / WATCH / AVOID) through the real engine.
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agent.pipeline import SourcingPipeline
 from app.analytics.repository import AnalyticsRepository
 from app.domain.demo_seed import seed_sourcing_demo
 from app.domain.models.product import Product
@@ -84,3 +87,43 @@ async def test_seed_produces_buy_watch_avoid_spread(db_session: AsyncSession) ->
     for asin, want in expected.items():
         action = await _decision_action(db_session, asin)
         assert action == want, f"{asin}: expected {want}, got {action}"
+
+
+# ── End-to-end pipeline (runs the real run_full_pipeline) ──────────
+
+async def test_full_pipeline_produces_decisions(db_session: AsyncSession) -> None:
+    """The real sourcing pipeline (scan→match→evaluate→log) yields decisions.
+
+    Guards against regressions like the missing AnalyticsRepository.find_by_upc
+    that turned every pipeline decision into an ERROR.
+    """
+    await seed_sourcing_demo(db_session)
+    repo = AnalyticsRepository(db_session)
+    pipeline = SourcingPipeline(
+        plugin_manager=AsyncMock(),
+        sourcing_engine=SourcingEngine(repo),
+        analytics_repo=repo,
+        decision_logger=AsyncMock(),
+        notifier=AsyncMock(),
+        agent_run_id="test",
+    )
+
+    expected = {
+        "DEMO-ANK-PC10000": "BUY",
+        "DEMO-EARBUDS": "WATCH",
+        "DEMO-USBC": "WATCH",
+        "DEMO-CASE": "AVOID",
+    }
+    for item in DEMO_CATALOG:
+        decision = await pipeline.run_full_pipeline(
+            supplier_code="demo",
+            supplier_sku=item["supplier_sku"],
+            product_title=item["title"],
+            supplier_price=float(item["price"]),
+            asin=None,
+            upc=item["upc"],
+        )
+        assert decision.error is None, f"{item['supplier_sku']}: {decision.error}"
+        assert decision.action.value == expected[item["supplier_sku"]], (
+            f"{item['supplier_sku']}: got {decision.action.value}"
+        )
