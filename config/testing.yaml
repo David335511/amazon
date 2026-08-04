@@ -77,3 +77,39 @@ multilingual:
   prompt_inject_language: true
   llm_translate: true
   llm_translate_fallback: true
+
+plugins:
+  default_timeout: 30
+  default_retries: 3
+  suppliers:
+    # Supplier plugins are auto-discovered from app/plugins/suppliers. Flip
+    # `enabled: true` to let the agent scheduler scan that supplier each cycle.
+    # Real suppliers need API credentials (base_url + api_key) to return
+    # products. NEVER commit live keys here — keep placeholders and inject
+    # credentials securely (env var / Render secret).
+    walmart:
+      code: walmart
+      name: Walmart
+      enabled: true
+      api_key: ""
+      base_url: https://marketplace.walmartapis.com/v3
+    bestbuy:
+      code: bestbuy
+      name: Best Buy
+      enabled: false
+      api_key: ""
+    target:
+      code: target
+      name: Target
+      enabled: false
+      api_key: ""
+    costco:
+      code: costco
+      name: Costco
+      enabled: false
+      api_key: ""
+    homedepot:
+      code: homedepot
+      name: Home Depot
+      enabled: false
+      api_key: ""

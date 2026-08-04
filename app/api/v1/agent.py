@@ -18,9 +18,9 @@ Endpoints:
 from __future__ import annotations
 
 from typing import Any
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agent import (
@@ -32,18 +32,18 @@ from app.agent import (
     SourcingPipeline,
     TaskQueue,
 )
-from app.agent.models import DecisionAction, DecisionLog
+from app.agent.models import DecisionAction
 from app.analytics.repository import AnalyticsRepository
+from app.config import settings
 from app.core.database import get_db
+from app.core.dependencies import get_memory_manager
 from app.core.logging import get_logger
 from app.core.redis import get_redis
-from app.core.dependencies import get_memory_manager
 from app.memory import MemoryManager
+from app.plugins.config import SupplierPluginConfig
 from app.plugins.manager import PluginManager
 from app.plugins.registry import PluginRegistry
-from app.plugins.config import SupplierPluginConfig
 from app.sourcing.engine import SourcingEngine
-from redis.asyncio import Redis
 
 logger = get_logger(__name__)
 
@@ -75,10 +75,11 @@ async def get_agent_deps(
     decision_logger = DecisionLogger(redis_client)
     notifier = Notifier(min_score_to_notify=_agent_config.min_opportunity_score_to_notify)
 
-    # Plugin manager
+    # Plugin manager — built from the `plugins` config block so the agent
+    # scheduler knows which supplier plugins are enabled (see config/*.yaml).
     registry = PluginRegistry()
     registry.discover()
-    plugin_config = SupplierPluginConfig()
+    plugin_config = SupplierPluginConfig.model_validate(settings.plugins)
     plugin_manager = PluginManager(registry=registry, config=plugin_config)
     await plugin_manager.initialize()
 

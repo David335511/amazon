@@ -249,6 +249,11 @@ class Settings(BaseSettings):
     # Raw YAML block for multilingual AI support. Validated lazily into
     # `app.multilingual.config.MultilingualConfig` by the DI layer.
     multilingual: dict[str, Any] = Field(default_factory=dict)
+    # Raw YAML block for supplier plugin configuration. Validated lazily into
+    # `app.plugins.config.SupplierPluginConfig` by the agent API, so the agent
+    # scheduler knows which supplier plugins to scan. Keys are placeholder-free
+    # (empty credentials by default) to avoid committing live secrets.
+    plugins: dict[str, Any] = Field(default_factory=dict)
     # API security (Phase 0). Disabled by default so local dev is unaffected;
     # set `enabled: true` and provide API keys to protect the API.
     security: SecurityConfig = Field(default_factory=SecurityConfig)
@@ -328,6 +333,7 @@ class Settings(BaseSettings):
             learning=dict(yaml_data.get("learning", {})),
             i18n=dict(yaml_data.get("i18n", {})),
             multilingual=dict(yaml_data.get("multilingual", {})),
+            plugins=dict(yaml_data.get("plugins", {})),
             event_bus=event_bus_cfg,
             security=security_cfg,
         )

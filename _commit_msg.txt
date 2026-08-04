@@ -1,0 +1,17 @@
+Wire supplier plugin config; enable walmart supplier for agent
+
+The agent scheduler previously hardcoded an empty SupplierPluginConfig, so
+get_enabled_suppliers() always returned [] and every scheduler cycle
+short-circuited (no enabled suppliers). Enabling a supplier was impossible
+via config.
+
+- app/config/__init__.py: add a `plugins` raw-dict field to Settings and
+  wire it in Settings.load() from the YAML block.
+- app/api/v1/agent.py: build SupplierPluginConfig from settings.plugins
+  instead of the hardcoded empty config, so the agent's plugin manager
+  honours enabled suppliers.
+- config/{development,production,testing}.yaml: add a plugins.suppliers
+  block enabling walmart (empty api_key placeholder; other suppliers listed
+  disabled as examples). Placeholder creds only - never commit live keys.
+
+824 tests pass; agent tests (32) green.
