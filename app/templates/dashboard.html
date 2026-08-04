@@ -326,22 +326,22 @@
   <div id="tab-retailers" class="tab-content">
     <div class="card">
       <div class="card-header">
-        <span class="card-title">Retailer Lookup (Walmart / Home Depot)</span>
+        <span class="card-title" data-i18n="retailers.title">Retailer Lookup (Walmart / Home Depot)</span>
         <span id="retailerStatus" style="font-size:12px;color:var(--text2)"></span>
         <span id="retailerBudget" style="font-size:12px;color:var(--text2)"></span>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <select id="retailerProvider" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
-          <option value="walmart">Walmart</option>
-          <option value="home_depot">Home Depot</option>
+          <option value="walmart" data-i18n="retailers.provider_walmart">Walmart</option>
+          <option value="home_depot" data-i18n="retailers.provider_home_depot">Home Depot</option>
         </select>
-        <input id="retailerProductId" type="text" placeholder="Product ID / Item #" style="width:180px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
-        <input id="retailerAmazonPrice" type="number" step="0.01" min="0" placeholder="Amazon sell price" style="width:150px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
-        <input id="retailerFbaFee" type="number" step="0.01" min="0" placeholder="FBA fee" style="width:100px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
-        <input id="retailerReferral" type="number" step="0.01" min="0" max="100" placeholder="Referral %" style="width:110px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
-        <button class="btn btn-primary" onclick="retailerLookup()">Lookup &amp; Score</button>
+        <input id="retailerProductId" type="text" data-i18n="retailers.product_id_placeholder" placeholder="Product ID / Item #" style="width:180px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
+        <input id="retailerAmazonPrice" type="number" step="0.01" min="0" data-i18n="retailers.amazon_price_placeholder" placeholder="Amazon sell price" style="width:150px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
+        <input id="retailerFbaFee" type="number" step="0.01" min="0" data-i18n="retailers.fba_fee_placeholder" placeholder="FBA fee" style="width:100px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
+        <input id="retailerReferral" type="number" step="0.01" min="0" max="100" data-i18n="retailers.referral_placeholder" placeholder="Referral %" style="width:110px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
+        <button class="btn btn-primary" onclick="retailerLookup()" data-i18n="retailers.lookup">Lookup &amp; Score</button>
       </div>
-      <div id="retailerResult"><span style="color:var(--text2);font-size:13px">Enter a product ID above and click Lookup &amp; Score.</span></div>
+      <div id="retailerResult"><span style="color:var(--text2);font-size:13px" data-i18n="retailers.enter_prompt">Enter a product ID above and click Lookup &amp; Score.</span></div>
     </div>
   </div>
 
@@ -808,14 +808,16 @@ function renderSourcingResult(data) {
 // ═══════════════════════════════════════════════════════════════
 // Retailer Lookup (Walmart / Home Depot)
 // ═══════════════════════════════════════════════════════════════
+let lastRetailerData = null;
+
 async function retailerLookup() {
   const provider = document.getElementById('retailerProvider').value;
   const productId = document.getElementById('retailerProductId').value.trim();
-  if (!productId) { showToast('Enter a product ID', 'error'); return; }
+  if (!productId) { showToast(__('retailers.enter_product_id'), 'error'); return; }
   const amazonPrice = parseFloat(document.getElementById('retailerAmazonPrice').value);
   const fbaFee = parseFloat(document.getElementById('retailerFbaFee').value) || 0;
   const referral = parseFloat(document.getElementById('retailerReferral').value);
-  document.getElementById('retailerResult').innerHTML = '<span class="spinner"></span> Looking up...';
+  document.getElementById('retailerResult').innerHTML = '<span class="spinner"></span> ' + __('retailers.looking_up');
 
   const body = { provider, product_id: productId };
   if (!isNaN(amazonPrice) && amazonPrice > 0) body.amazon_price = amazonPrice;
@@ -824,6 +826,7 @@ async function retailerLookup() {
 
   try {
     const data = await api('POST', '/sourcing/retailers/lookup', body);
+    lastRetailerData = data;
     renderRetailerResult(data);
     loadRetailerBudget();
     loadRetailerStatus();
@@ -839,6 +842,7 @@ function fmtMoney(v, currency) {
 }
 
 function renderRetailerResult(data) {
+  lastRetailerData = data;
   const p = data.product || {};
   const score = data.opportunity || {};
   const rules = score.rule_results || [];
@@ -856,12 +860,12 @@ function renderRetailerResult(data) {
               <span style="text-transform:capitalize">(${p.provider || ''})</span>
             </div>
             <div style="margin-top:6px;display:flex;gap:16px;flex-wrap:wrap;font-size:13px">
-              <span>Price: <strong>${fmtMoney(price.current, price.currency)}</strong>${price.original != null ? ` <span style="color:var(--text2);text-decoration:line-through">${fmtMoney(price.original, price.currency)}</span>` : ''}</span>
-              <span>Rating: <strong>${p.rating != null ? p.rating + ' ★' : '—'}</strong> ${p.review_count != null ? '(' + p.review_count + ')' : ''}</span>
-              <span>Sellers: <strong>${p.seller_count != null ? p.seller_count : '—'}</strong></span>
-              <span>Stock: <strong>${p.in_stock === true ? 'In Stock' : p.in_stock === false ? 'Out' : (p.availability || '—')}</strong></span>
+              <span>${__('retailers.price')} <strong>${fmtMoney(price.current, price.currency)}</strong>${price.original != null ? ` <span style="color:var(--text2);text-decoration:line-through">${fmtMoney(price.original, price.currency)}</span>` : ''}</span>
+              <span>${__('retailers.rating')} <strong>${p.rating != null ? p.rating + ' ★' : '—'}</strong> ${p.review_count != null ? '(' + p.review_count + ')' : ''}</span>
+              <span>${__('retailers.sellers')} <strong>${p.seller_count != null ? p.seller_count : '—'}</strong></span>
+              <span>${__('retailers.stock')} <strong>${p.in_stock === true ? __('retailers.in_stock') : p.in_stock === false ? __('retailers.out') : (p.availability || '—')}</strong></span>
             </div>
-            ${p.url ? `<a href="${p.url}" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue)">View at retailer →</a>` : ''}
+            ${p.url ? `<a href="${p.url}" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue)">${__('retailers.view_at_retailer')} →</a>` : ''}
           </div>
         </div>
         <div style="font-size:24px;font-weight:700" class="${score.total_score >= 70 ? 'green' : score.total_score >= 40 ? 'yellow' : 'red'}">
@@ -869,20 +873,20 @@ function renderRetailerResult(data) {
         </div>
       </div>
       <div class="metric-row" style="margin-top:12px">
-        <div class="metric"><div class="metric-label">Opportunity Score</div><div class="metric-value">${score.total_score != null ? Number(score.total_score).toFixed(1) : '—'}</div></div>
-        <div class="metric"><div class="metric-label">Viable</div><div class="metric-value">${score.is_viable ? '✅' : '❌'}</div></div>
-        <div class="metric"><div class="metric-label">Critical Failures</div><div class="metric-value">${score.critical_failures || 0}</div></div>
+        <div class="metric"><div class="metric-label">${__('retailers.opportunity_score')}</div><div class="metric-value">${score.total_score != null ? Number(score.total_score).toFixed(1) : '—'}</div></div>
+        <div class="metric"><div class="metric-label">${__('retailers.viable')}</div><div class="metric-value">${score.is_viable ? '✅' : '❌'}</div></div>
+        <div class="metric"><div class="metric-label">${__('retailers.critical_failures')}</div><div class="metric-value">${score.critical_failures || 0}</div></div>
       </div>
   `;
 
   if (rules.length) {
     html += `<div style="margin-top:12px"><table>
-      <tr><th>Rule</th><th>Score</th><th>Status</th><th>Detail</th></tr>
+      <tr><th>${__('retailers.rule')}</th><th>${__('retailers.score')}</th><th>${__('retailers.status')}</th><th>${__('retailers.detail')}</th></tr>
       ${rules.map(r => `
         <tr>
           <td>${r.display_name || r.rule_name}</td>
           <td>${r.score != null ? (Number(r.score) * 100).toFixed(0) : '—'}</td>
-          <td><span class="badge ${r.passed ? 'badge-buy' : 'badge-avoid'} ">${r.passed ? 'PASS' : 'FAIL'}</span></td>
+          <td><span class="badge ${r.passed ? 'badge-buy' : 'badge-avoid'} ">${r.passed ? __('retailers.pass') : __('retailers.fail')}</span></td>
           <td style="color:var(--text2);font-size:12px">${r.summary || ''}</td>
         </tr>
       `).join('')}
@@ -898,8 +902,8 @@ async function loadRetailerBudget() {
     const b = await api('GET', '/sourcing/retailers/budget');
     const el = document.getElementById('retailerBudget');
     if (!el) return;
-    if (!b.configured) { el.textContent = 'Budget: not configured'; return; }
-    el.textContent = '· Budget: ' + b.used + '/' + b.monthly_limit + ' used · ' + b.remaining + ' remaining · ~' + b.daily_allowance + '/day';
+    if (!b.configured) { el.textContent = __('retailers.budget_not_configured'); return; }
+    el.textContent = __('retailers.budget_line', b.used, b.monthly_limit, b.remaining, b.daily_allowance);
   } catch (e) { /* silent */ }
 }
 
@@ -909,10 +913,12 @@ async function loadRetailerStatus() {
     const el = document.getElementById('retailerStatus');
     if (!el) return;
     if (s.serpapi_configured) {
-      const run = s.scheduler_running ? '<span style="color:var(--green)">running</span>' : '<span style="color:var(--yellow)">idle</span>';
-      el.innerHTML = '<span style="color:var(--green)">● SerpApi configured</span> · scheduler ' + run;
+      const run = s.scheduler_running
+        ? '<span style="color:var(--green)">' + __('retailers.scheduler_running') + '</span>'
+        : '<span style="color:var(--yellow)">' + __('retailers.scheduler_idle') + '</span>';
+      el.innerHTML = '<span style="color:var(--green)">● ' + __('retailers.serpapi_configured') + '</span> · ' + __('retailers.scheduler') + ' ' + run;
     } else {
-      el.innerHTML = '<span style="color:var(--red)">● SerpApi not configured — add SERPAPI_API_KEY</span>';
+      el.innerHTML = '<span style="color:var(--red)">● ' + __('retailers.serpapi_not_configured') + '</span>';
     }
   } catch (e) { /* silent */ }
 }
@@ -1281,6 +1287,11 @@ function applyTranslations() {
     const translated = t(titleKey);
     if (translated !== titleKey) document.title = translated;
   }
+
+  // Re-render dynamic retailer content in the new language
+  if (lastRetailerData) renderRetailerResult(lastRetailerData);
+  loadRetailerBudget();
+  loadRetailerStatus();
 }
 
 // Switch language instantly without page refresh
