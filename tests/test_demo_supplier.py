@@ -7,6 +7,7 @@ sourcing decisions (BUY / WATCH / WATCH / AVOID) through the real engine.
 
 from __future__ import annotations
 
+from collections import Counter
 from unittest.mock import AsyncMock
 
 from sqlalchemy import select
@@ -16,7 +17,12 @@ from app.agent.pipeline import SourcingPipeline
 from app.analytics.repository import AnalyticsRepository
 from app.domain.demo_seed import seed_sourcing_demo
 from app.domain.models.product import Product
-from app.plugins.suppliers.demo import DEMO_CATALOG, DemoPlugin
+from app.plugins.suppliers.demo import (
+    DEFAULT_DEMO_SIZE,
+    DEMO_CATALOG,
+    DemoPlugin,
+    build_demo_catalog,
+)
 from app.sourcing.engine import SourcingEngine
 
 
@@ -40,16 +46,21 @@ async def _decision_action(db: AsyncSession, asin: str) -> str:
 async def test_demo_plugin_search_returns_catalog() -> None:
     plugin = DemoPlugin()
     results = await plugin.search("", page=1, page_size=20)
-    assert len(results) == len(DEMO_CATALOG)
-    assert {r.supplier_sku for r in results} == {i["supplier_sku"] for i in DEMO_CATALOG}
+    assert len(results) == 20  # paginated
+    # the hand-curated products always appear first
+    curated_skus = {i["supplier_sku"] for i in DEMO_CATALOG}
+    assert curated_skus <= {r.supplier_sku for r in results}
     assert all(r.price > 0 for r in results)
+    # a large page exposes the generated catalog
+    big = await plugin.search("", page=1, page_size=DEFAULT_DEMO_SIZE)
+    assert len(big) == DEFAULT_DEMO_SIZE
 
 
 async def test_demo_plugin_search_filters_by_query() -> None:
     plugin = DemoPlugin()
-    results = await plugin.search("earbuds")
+    results = await plugin.search("anker")
     assert len(results) == 1
-    assert results[0].supplier_sku == "DEMO-EARBUDS"
+    assert results[0].supplier_sku == "DEMO-ANK-PC10000"
 
 
 async def test_demo_plugin_lookup_unknown_sku_returns_none() -> None:
@@ -127,3 +138,46 @@ async def test_full_pipeline_produces_decisions(db_session: AsyncSession) -> Non
         assert decision.action.value == expected[item["supplier_sku"]], (
             f"{item['supplier_sku']}: got {decision.action.value}"
         )
+
+
+# ── Large deterministic catalog generator ───────────────────────────
+
+async def test_build_catalog_is_deterministic_and_large() -> None:
+    catalog = build_demo_catalog()
+    assert len(catalog) == DEFAULT_DEMO_SIZE == 500
+    assert len({i["asin"] for i in catalog}) == 500
+    assert len({i["upc"] for i in catalog}) == 500
+    # curated products are always the first entries
+    assert catalog[0]["supplier_sku"] == DEMO_CATALOG[0]["supplier_sku"]
+    # fully reproducible
+    assert build_demo_catalog() == catalog
+    # categories span many markets
+    cats = {i["category"] for i in catalog}
+    assert len(cats) >= 10
+
+
+async def test_seed_large_set_and_idempotent(db_session: AsyncSession) -> None:
+    first = await seed_sourcing_demo(db_session, count=60)
+    assert first["products_created"] == 60
+    assert first["products_seeded"] == 60
+    assert first["analytics_written"] == 60
+
+    second = await seed_sourcing_demo(db_session, count=60)
+    assert second["products_created"] == 0
+    assert second["analytics_written"] == 0
+
+
+async def test_seed_small_count_uses_curated_only(db_session: AsyncSession) -> None:
+    summary = await seed_sourcing_demo(db_session, count=4)
+    assert summary["products_created"] == 4
+    assert summary["products_seeded"] == 4
+
+
+async def test_large_set_decision_spread(db_session: AsyncSession) -> None:
+    """Generated products produce a realistic mix of decisions (not all AVOID)."""
+    await seed_sourcing_demo(db_session, count=60)
+    actions: Counter[str] = Counter()
+    for g in range(56):  # 60 - 4 curated
+        asin = f"B0DEM{g + 10000:05d}"
+        actions[await _decision_action(db_session, asin)] += 1
+    assert len(actions) >= 3, f"expected a spread of actions, got {dict(actions)}"

@@ -172,16 +172,18 @@ async def resume_agent(
     description=(
         "Inserts the demo supplier catalog's products plus matching Amazon "
         "analytics data so the sourcing agent can evaluate them and log "
-        "BUY/WATCH/AVOID decisions (works offline, no supplier API needed)."
+        "BUY/WATCH/AVOID decisions (works offline, no supplier API needed). "
+        "Pass ?count=N to seed a larger deterministic set (default 500)."
     ),
 )
 async def seed_demo_sourcing(
     db: AsyncSession = Depends(get_db),
+    count: int = Query(500, ge=1, le=5000, description="Number of demo products to seed"),
 ) -> dict[str, object]:
     """Seed demo products + analytics for the sourcing agent."""
     from app.domain.demo_seed import seed_sourcing_demo
 
-    return await seed_sourcing_demo(db)
+    return await seed_sourcing_demo(db, count=count)
 
 
 # ═══════════════════════════════════════════════════════════════
