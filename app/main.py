@@ -93,6 +93,52 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     except Exception as exc:
         logger.warning("Failed to start analytics scheduler: %s", exc)
 
+    # Start retailer (Walmart / Home Depot) refresh scheduler, budget-paced
+    # against the monthly SerpApi search quota. Only runs when a key is
+    # configured and at least one product is listed in SERPAPI_MONITOR_PRODUCTS.
+    try:
+        from app.core.redis import redis_client as app_redis
+        from app.integrations.retailers import (
+            RetailerBudget,
+            RetailerRefreshJob,
+            RetailerService,
+            SerpApiClient,
+        )
+        from app.integrations.retailers.config import RetailerConfig
+        from app.integrations.retailers.lifecycle import configure_retailer_runtime
+        from app.integrations.retailers.service import parse_monitor_products
+
+        rcfg = RetailerConfig()
+        if rcfg.is_configured:
+            client = SerpApiClient(config=rcfg, redis_client=app_redis)
+            service = RetailerService(client=client)
+            budget = RetailerBudget(rcfg.monthly_budget, app_redis)
+            monitor = parse_monitor_products(rcfg.monitor_products)
+            job: RetailerRefreshJob | None = None
+            if monitor:
+                job = RetailerRefreshJob(
+                    service=service,
+                    budget=budget,
+                    monitor_provider=lambda reqs=monitor: list(reqs),
+                    interval=rcfg.scheduler_interval,
+                )
+                job.start()
+                logger.info(
+                    "Retailer refresh scheduler started for %d products (monthly budget=%d)",
+                    len(monitor),
+                    rcfg.monthly_budget,
+                )
+            else:
+                logger.info(
+                    "Retailer key configured but SERPAPI_MONITOR_PRODUCTS is "
+                    "empty; scheduler will stay idle",
+                )
+            configure_retailer_runtime(service, budget, job)
+        else:
+            logger.info("SERPAPI_API_KEY not configured; retailer scheduler disabled")
+    except Exception as exc:
+        logger.warning("Failed to start retailer scheduler: %s", exc)
+
     yield
 
     # Shutdown
@@ -110,6 +156,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
         except Exception as exc:
             logger.warning("Error stopping analytics scheduler: %s", exc)
         _analytics_scheduler = None
+
+    # Stop retailer scheduler
+    try:
+        from app.integrations.retailers.lifecycle import shutdown_retailer_runtime
+
+        await shutdown_retailer_runtime()
+    except Exception as exc:
+        logger.warning("Error stopping retailer scheduler: %s", exc)
 
     logger.info("Amazon AI Commerce Platform shut down")
 
@@ -164,6 +218,7 @@ def _mount_dashboard(app: FastAPI) -> None:
     # Serve dashboard HTML at root
     dashboard_path = Path(__file__).resolve().parent / "templates" / "dashboard.html"
     if dashboard_path.exists():
+
         @app.get("/", include_in_schema=False, response_class=HTMLResponse)
         async def dashboard(request: Request) -> HTMLResponse:
             return HTMLResponse(dashboard_path.read_text(encoding="utf-8"))
