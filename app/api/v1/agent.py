@@ -166,6 +166,24 @@ async def resume_agent(
     return {"status": "resumed"}
 
 
+@router.post(
+    "/seed",
+    summary="Seed demo products + Amazon analytics data",
+    description=(
+        "Inserts the demo supplier catalog's products plus matching Amazon "
+        "analytics data so the sourcing agent can evaluate them and log "
+        "BUY/WATCH/AVOID decisions (works offline, no supplier API needed)."
+    ),
+)
+async def seed_demo_sourcing(
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """Seed demo products + analytics for the sourcing agent."""
+    from app.domain.demo_seed import seed_sourcing_demo
+
+    return await seed_sourcing_demo(db)
+
+
 # ═══════════════════════════════════════════════════════════════
 # Status & Monitoring
 # ═══════════════════════════════════════════════════════════════

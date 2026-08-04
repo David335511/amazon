@@ -1,0 +1,26 @@
+Seed demo products + analytics so the sourcing agent produces decisions
+
+The agent pipeline needs products + Amazon analytics data in the DB and a
+supplier to scan. There was no way to see the agent actually evaluate and
+log decisions without a live supplier API + credentials. This adds an
+offline, deterministic demo path (pairing step 2 of the enable-supplier →
+seed-data → watch-decisions plan).
+
+- app/plugins/suppliers/demo.py: new DemoPlugin returning a fixed in-memory
+  catalog (4 products: Anker charger, earbuds, USB-C cable, phone case) with
+  no network/credentials. DEMO_CATALOG is the single source of truth.
+- app/domain/demo_seed.py: seed_sourcing_demo() writes matching products +
+  Amazon analytics (price history, supplier cost, seller counts, sales
+  estimate, fees, inventory) via ORM. Idempotent (keyed by ASIN). Analytics
+  tuned so the 4 products produce BUY / WATCH / WATCH / AVOID through the
+  real sourcing engine.
+- app/api/v1/agent.py: POST /api/v1/agent/seed endpoint.
+- config/*.yaml: enable the `demo` supplier; keep walmart registered but
+  disabled until a real API key is provided.
+- app/analytics/repository.py: fix get_latest_supplier_prices() to use ORM
+  instead of raw SQL with a str(product_id) UUID comparison (broke on
+  SQLite, so supplier-cost lookups returned empty and ROI always computed
+  as 0% in tests). Portable across SQLite and Postgres; semantics preserved
+  (latest price per supplier, ordered by price asc).
+
+830 tests pass (824 + 6 new demo tests).

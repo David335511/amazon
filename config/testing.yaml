@@ -87,10 +87,17 @@ plugins:
     # Real suppliers need API credentials (base_url + api_key) to return
     # products. NEVER commit live keys here — keep placeholders and inject
     # credentials securely (env var / Render secret).
+    # `demo` is an offline seed supplier (see app/plugins/suppliers/demo.py)
+    # used to demonstrate the agent end-to-end without external APIs. Seed
+    # matching products via POST /api/v1/agent/seed, then run a cycle.
+    demo:
+      code: demo
+      name: Demo
+      enabled: true
     walmart:
       code: walmart
       name: Walmart
-      enabled: true
+      enabled: false
       api_key: ""
       base_url: https://marketplace.walmartapis.com/v3
     bestbuy:

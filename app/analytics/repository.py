@@ -12,9 +12,8 @@ Design decisions:
 
 from __future__ import annotations
 
-import math
 from collections.abc import Sequence
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
@@ -22,12 +21,6 @@ from uuid import UUID
 from sqlalchemy import Select, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.analytics.schemas import (
-    CollectionStatus,
-    HistoricalSummary,
-    TimeSeriesPoint,
-    TrendDirection,
-)
 from app.domain.models.product import Product
 from app.domain.models.sourcing import (
     AmazonPrice,
@@ -396,25 +389,24 @@ class AnalyticsRepository(BaseRepository[Product]):
     ) -> Sequence[ProductPrice]:
         """Get the most recent supplier price per supplier.
 
-        Uses a window function (ROW_NUMBER) to get the latest price
-        for each supplier. This is more efficient than N+1 queries.
+        Returns the latest price observation for each distinct supplier
+        (including the NULL/generic supplier bucket), ordered by price
+        ascending. Uses ORM queries so the product_id UUID comparison is
+        portable across SQLite and Postgres.
         """
-        stmt = text("""
-            WITH ranked AS (
-                SELECT *,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY product_id, supplier_id
-                        ORDER BY effective_date DESC
-                    ) AS rn
-                FROM product_prices
-                WHERE product_id = :product_id
-            )
-            SELECT * FROM ranked WHERE rn = 1
-            ORDER BY price ASC
-        """)
-        result = await self._session.execute(stmt, {"product_id": str(product_id)})
-        rows = result.fetchall()
-        return [ProductPrice(**dict(row._mapping)) for row in rows]
+        stmt = (
+            select(ProductPrice)
+            .where(ProductPrice.product_id == product_id)
+            .order_by(desc(ProductPrice.effective_date))
+        )
+        result = await self._session.execute(stmt)
+        rows = result.scalars().all()
+
+        latest: dict[UUID | None, ProductPrice] = {}
+        for row in rows:
+            if row.supplier_id not in latest:
+                latest[row.supplier_id] = row
+        return sorted(latest.values(), key=lambda p: p.price)
 
     async def get_latest_inventory(
         self,
