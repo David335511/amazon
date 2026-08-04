@@ -34,6 +34,17 @@
     --cyan: #0891b2;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* Keep inputs from overflowing their card frame: let flex rows shrink them
+     and never exceed the container width (long placeholders used to push the
+     min-width past the card, sticking the field out of the frame). */
+  input[type="text"], input[type="search"], textarea {
+    min-width: 0;
+    max-width: 100%;
+    flex-shrink: 1;
+  }
+  /* Input rows inside cards (search/ASIN/assistant) — let them wrap so
+     fields and buttons never spill outside the card frame on narrow widths. */
+  .card div[style*="display:flex"] { flex-wrap: wrap; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
       'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', 'Source Han Sans SC',
@@ -91,10 +102,10 @@
     overflow-wrap: break-word;
   }
   .card-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    margin-bottom: 16px; flex-wrap: wrap;
   }
-  .card-title { font-size: 14px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; min-width: 0; }
   [lang="zh-CN"] .card-title { text-transform: none; letter-spacing: 0.02em; }
   .card-value { font-size: 32px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
   .card-value.green { color: var(--green); }
